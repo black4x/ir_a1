@@ -15,7 +15,7 @@ class TestRead {
     length += doc.content.length
     tokens += Tokenizer.tokenize(doc.content).length
   }
-  println("Total number of characters = " + length)
+  println(" Total number of characters = " + length)
 
   println("Total number of tokens     = " + tokens)
 
