@@ -18,6 +18,6 @@ class TestRead {
   println("Total number of characters = " + length)
 
 
-  println("Total number of tokens     = " + tokens)
+  println(" Total number of tokens     = " + tokens)
 
 }
