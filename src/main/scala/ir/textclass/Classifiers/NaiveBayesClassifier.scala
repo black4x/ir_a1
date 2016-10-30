@@ -10,8 +10,8 @@ import scala.collection.mutable.ListBuffer
 class NaiveBayesClassifier(val xmldocs:Stream[XMLDocument], val code:String, val vocabSize:Long, val n:Long)  {
 
 
-  var length: Long = 0
-  var tokens: List[String] = List()
+  //var length: Long = 0
+  //var tokens: List[String] = List()
 
   var npos: Integer = 0;
   //val xmldocs = trainstream.stream
@@ -19,16 +19,15 @@ class NaiveBayesClassifier(val xmldocs:Stream[XMLDocument], val code:String, val
   val xmldocsneg = xmldocs.filter(!_.codes(code))
 
   /*Calculate p(c) for the two classes and store it in a map (perhaps there are better structures)*/
-  var pc = Map("cpos" -> 1.0, "cneg" -> 0.0)
+  //var pc = Map("cpos" -> 1.0, "cneg" -> 0.0)
+  var pc = Map[String, Double]()
   npos = xmldocspos.length
-  pc = pc + ("cpos" -> npos.toFloat / n)
-  pc = pc + ("cneg" -> (1 - npos.toFloat / n))
+  pc = pc + ("cpos" -> npos.toDouble / n)
+  pc = pc + ("cneg" -> (1 - npos.toDouble / n))
   //print(pc)
 
   /* Calculate and store the p(w|c) for the two classes and store the values in pwcpos and pwcnegwith alpha=1 smoothing
-  * pwcpos map contains only tokens of the poitivedocuments
-  *
-   */
+  * pwcpos map contains only tokens of the poitivedocuments */
 
   //denominator
   val sumlengthdpos = xmldocspos.flatMap(_.tokens).length.toDouble + vocabSize
@@ -38,6 +37,7 @@ class NaiveBayesClassifier(val xmldocs:Stream[XMLDocument], val code:String, val
   val pwcpos=xmldocspos.flatMap(_.tokens).groupBy(identity).mapValues(_.size + 1)
   val pwcneg = xmldocsneg.flatMap(_.tokens).groupBy(identity).mapValues(_.size + 1)
 
+  println("the size of pwcpos is :" +pwcpos.size)
 
  // println(pwcpos)
  // println(pwcneg.values.sum)
@@ -59,21 +59,6 @@ class NaiveBayesClassifier(val xmldocs:Stream[XMLDocument], val code:String, val
     //max(cpos, cneg)
 
 
-//    if( cpos >= cneg){
-//      //vr_labels_found += vr_label
-//      println("label found: " + vr_label)
-//    }
-//    // add all labels found for the current document to the map
-//    vr_result +=  (vr_doc_id -> vr_labels_found)
-//
-//    vr_result foreach {case (key, value) => {
-//      print (key + " ")
-//      value.foreach(label => print(label + " "))
-//    }
-//    }
-//    println(" ")
-//
-//
 
   }
 

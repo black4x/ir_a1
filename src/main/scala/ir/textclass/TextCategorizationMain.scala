@@ -45,6 +45,24 @@ object TextCategorizationMain {
 
     print(model)
 
+    // todo: read test docs and call prediction method
+
+    //    if( cpos >= cneg){
+    //      //vr_labels_found += vr_label
+    //      println("label found: " + vr_label)
+    //    }
+    //    // add all labels found for the current document to the map
+    //    vr_result +=  (vr_doc_id -> vr_labels_found)
+    //
+    //    vr_result foreach {case (key, value) => {
+    //      print (key + " ")
+    //      value.foreach(label => print(label + " "))
+    //    }
+    //    }
+    //    println(" ")
+    //
+    //
+
     myStopWatch.stop
     println("Runtime: " + myStopWatch.stopped)
 
