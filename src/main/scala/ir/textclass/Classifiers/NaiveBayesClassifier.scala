@@ -3,11 +3,14 @@ package ir.textclass.Classifiers
 import breeze.linalg.max
 import ch.ethz.dal.tinyir.io.ReutersRCVStream
 import ch.ethz.dal.tinyir.processing.{Tokenizer, XMLDocument}
+import ch.ethz.dal.tinyir.util.StopWatch
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, val vocabSize:Double, val n:Double)  {
+
+  val myStopWatch = new StopWatch()
 
   //var length: Long = 0
   //var tokens: List[String] = List()
@@ -30,38 +33,60 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   pc = pc + ("cneg" -> prior_neg)
   println(pc)
 
+  // Ralph: This way is much faster than somethign like tks_pos.length
+  myStopWatch.start
+  var tks_pos_count : Double = 0
+  var tks_neg_count : Double = 0
+  var relevant_doc = false
+  for (doc <- reuters_train.stream) {
+    relevant_doc = false
+    for (c <- doc.codes) {
+      if (c == code){ relevant_doc = true}
+    }
+    if(relevant_doc == true) {
+      tks_pos_count += Tokenizer.tokenize(doc.content).length
+    }
+    else{
+      tks_neg_count += Tokenizer.tokenize(doc.content).length
+    }
+  }
+  myStopWatch.stop
+  println("token count time: " + myStopWatch.stopped)
+  println("nr tks pos: " + tks_pos_count)
+  println("nr tks neg: " + tks_neg_count)
+
   /* Calculate and store the p(w|c) for the two classes and store the values in pwcpos and pwcnegwith alpha=1 smoothing
-  * pwcpos map contains only tokens of the poitivedocuments */
+     pwcpos map contains only tokens of the poitive documents */
 
-  // comment Ralph: this is still too slow! changed it a bit like it is in the script
-  println("start calculating tokens for pos")
-  val tks_pos = reuters_train.stream.filter(_.codes(code)).flatMap(_.tokens)
-  println("start calculating tokens for neg")
-  val tks_neg = reuters_train.stream.filter(!_.codes(code)).flatMap(_.tokens)
-  println("end calculating tokens")
 
+  val tks_pos = reuters_train.stream.filter(_.codes(code)).flatMap(_.tokens) // this is fast
+  val tks_neg = reuters_train.stream.filter(!_.codes(code)).flatMap(_.tokens) // this is fast
+
+  // Denominator
   println("start calculating denominator pos")
-  val sumlengthdpos = tks_pos.length.toDouble + vocabSize
+  val sumlengthdpos: Double = tks_pos_count + vocabSize
   println("start calculating denominator neg")
-  //val sumlengthdneg = tks_neg.length.toDouble + vocabSize // This crashes!!! the length functions takes too much memory!
-  println("end calculating denominators")
+  val sumlengthdneg: Double = tks_neg_count + vocabSize
+  println("denominator pos: " + sumlengthdpos + " denominator neg: " + sumlengthdneg )
 
-  // Nominator
-  println("start calculating Nominator pos")
+  /* this would take too long (replaced by above lines)
+  val sumlengthdpos = tks_pos.length.toDouble + vocabSize
+  val sumlengthdneg = tks_neg.length.toDouble + vocabSize // This crashes!!! the length functions takes too much memory!
+  */
+
+  // Nominator (TODO: active pwcneg once performance fixed
+  myStopWatch.start
   val pwcpos = tks_pos.groupBy(identity).mapValues(l=>(l.length+1))
-  println("start calculating Nominator net")
-  val pwcneg = tks_neg.groupBy(identity).mapValues(l=>(l.length+1))
-  println("end calculating Nominators")
+  //val pwcneg = tks_neg.groupBy(identity).mapValues(l=>(l.length+1)) // this crashes memory
+  myStopWatch.stop
+  println("Nominator calc done in: " + myStopWatch.stopped)
 
-  // delete again to save memory (let's give it a try...)
-  tks_pos.drop(tks_pos.length)
-  tks_neg.drop(tks_neg.length)
+  println("the size of pwcpos is :" + pwcpos.size)
 
   /* RALPH: THIS CRASHES MEMORY, so commented out for now
   //denominator
   val sumlengthdpos = xmldocspos.flatMap(_.tokens).length.toDouble + vocabSize
   val sumlengthdneg = xmldocsneg.flatMap(_.tokens).length.toDouble + vocabSize
-
   // nominator
   val pwcpos=xmldocspos.flatMap(_.tokens).groupBy(identity).mapValues(_.size + 1)
   val pwcneg = xmldocsneg.flatMap(_.tokens).groupBy(identity).mapValues(_.size + 1)
