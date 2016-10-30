@@ -14,8 +14,8 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
 
   //var npos: Integer = 0;
   //val xmldocs = trainstream.stream
-  val xmldocspos = reuters_train.stream.filter(_.codes(code))
-  val xmldocsneg = reuters_train.stream.filter(!_.codes(code))
+  //val xmldocspos = reuters_train.stream.filter(_.codes(code))
+  //val xmldocsneg = reuters_train.stream.filter(!_.codes(code))
 
   //println ("nr of docs in class: "+ xmldocspos.length)
   //println ("nr of docs not in class: "+ xmldocsneg.length)
@@ -25,13 +25,29 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   var pc = Map[String, Double]()
   val prior_pos = reuters_train.stream.filter(_.codes(code)).length.toDouble / n
   val prior_neg = 1 - prior_pos
+  //var npos = xmldocspos.length
   pc = pc + ("cpos" -> prior_pos)
   pc = pc + ("cneg" -> prior_neg)
-  print(pc)
+  println(pc)
 
   /* Calculate and store the p(w|c) for the two classes and store the values in pwcpos and pwcnegwith alpha=1 smoothing
   * pwcpos map contains only tokens of the poitivedocuments */
 
+  // comment Ralph: this is still too slow! changed it a bit like it is in the script
+  println("start calculating tokens for pos")
+  val tks_pos = reuters_train.stream.filter(_.codes(code)).flatMap(_.tokens)
+  println("start calculating tokens for neg")
+  val tks_neg = reuters_train.stream.filter(!_.codes(code)).flatMap(_.tokens)
+  println("end calculating tokens")
+
+  println("start calculating denominator pos")
+  val sumlengthdpos = tks_pos.length.toDouble + vocabSize
+  println("start calculating denominator neg")
+  val sumlengthdneg = tks_neg.length.toDouble + vocabSize
+  println("end calculating denominators")
+
+  // todo Nomintor (in a better way)
+  
   /* RALPH: THIS CRASHES MEMORY, so commented out for now
   //denominator
   val sumlengthdpos = xmldocspos.flatMap(_.tokens).length.toDouble + vocabSize
