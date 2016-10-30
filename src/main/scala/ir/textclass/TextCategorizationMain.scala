@@ -30,21 +30,29 @@ object TextCategorizationMain {
 
     val reuters = new ReutersRCVStream("/home/ajuodelis/eth/ir/project1/train")
     //val test = new ReutersRCVStream("/home/ajuodelis/eth/ir/project1/test")
-    val trainDoc = reuters.stream;
 
-    val vocabSize = trainDoc.flatMap(_.tokens).distinct.length
-    val n = trainDoc.length
+    // Comment Ralph;
+    // Cannot store the stream in trainDoc because the next statement for VocaSize will crash!!!
+    //val trainDoc = reuters.stream; // DO NOT DO THIS
+
+    // Comment Ralph: This statement takes 50 seconds to run
+    val vocabSize = reuters.stream.flatMap(_.tokens).distinct.length
+    val n = reuters.length
+
+    println("Vacabulary Size: " + vocabSize)
+    println("Nr of Docs: " + n)
+
 
     val labels = List("M13", "C21")
 
-    var model = Map[String, NaiveBayesClassifier]()
+    /*var model = Map[String, NaiveBayesClassifier]()
 
     labels.foreach(label => {
       model += (label -> new NaiveBayesClassifier(trainDoc, label, vocabSize, n))
     })
 
     print(model)
-
+*/
     // todo: read test docs and call prediction method
 
     //    if( cpos >= cneg){
