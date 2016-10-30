@@ -38,6 +38,8 @@ object TextCategorizationMain {
     // Comment Ralph: This statement takes 50 seconds to run but way better than using trainDoc.flatMap...
     val vocabSize = reuters_train.stream.flatMap(_.tokens).distinct.length
     val n = reuters_train.length.toDouble
+    // So we only have to count the positive tokens and can use this number to calculate the negative tokens
+    val count_tokens = reuters_train.stream.flatMap(_.tokens).length.toDouble
 
     println("Vacabulary Size: " + vocabSize)
     println("Nr of Docs: " + n)
@@ -48,7 +50,7 @@ object TextCategorizationMain {
     var model = Map[String, NaiveBayesClassifier]()
 
     labels.foreach(label => {
-      model += (label -> new NaiveBayesClassifier(reuters_train, label, vocabSize, n))
+      model += (label -> new NaiveBayesClassifier(reuters_train, label, vocabSize, n, count_tokens))
     })
 
     println(model)
