@@ -51,7 +51,7 @@ object TextCategorizationMain {
       model += (label -> new NaiveBayesClassifier(reuters_train, label, vocabSize, n))
     })
 
-    print(model)
+    println(model)
 
     // todo: read test docs and call prediction method
 
