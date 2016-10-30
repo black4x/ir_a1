@@ -43,11 +43,20 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   println("start calculating denominator pos")
   val sumlengthdpos = tks_pos.length.toDouble + vocabSize
   println("start calculating denominator neg")
-  val sumlengthdneg = tks_neg.length.toDouble + vocabSize
+  //val sumlengthdneg = tks_neg.length.toDouble + vocabSize // This crashes!!! the length functions takes too much memory!
   println("end calculating denominators")
 
-  // todo Nomintor (in a better way)
-  
+  // Nominator
+  println("start calculating Nominator pos")
+  val pwcpos = tks_pos.groupBy(identity).mapValues(l=>(l.length+1))
+  println("start calculating Nominator net")
+  val pwcneg = tks_neg.groupBy(identity).mapValues(l=>(l.length+1))
+  println("end calculating Nominators")
+
+  // delete again to save memory (let's give it a try...)
+  tks_pos.drop(tks_pos.length)
+  tks_neg.drop(tks_neg.length)
+
   /* RALPH: THIS CRASHES MEMORY, so commented out for now
   //denominator
   val sumlengthdpos = xmldocspos.flatMap(_.tokens).length.toDouble + vocabSize
