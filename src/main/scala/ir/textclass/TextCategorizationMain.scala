@@ -25,6 +25,8 @@ object TextCategorizationMain {
 
 
     val myStopWatch = new StopWatch()
+    myStopWatch.start
+
 
     val reuters = new ReutersRCVStream("/home/ajuodelis/eth/ir/project1/train")
     //val test = new ReutersRCVStream("/home/ajuodelis/eth/ir/project1/test")
@@ -42,6 +44,9 @@ object TextCategorizationMain {
     })
 
     print(model)
+
+    myStopWatch.stop
+    println("Runtime: " + myStopWatch.stopped)
 
   }
 
