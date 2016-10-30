@@ -32,7 +32,7 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   println("start calculating denominator pos")
   val count_tokens_pos = tks_pos.length.toDouble
   val sumlengthdpos: Double = count_tokens_pos + vocabSize
-  val sumlengthdneg: Double = (count_tokens_pos - count_tokens ) + vocabSize
+  val sumlengthdneg: Double = (count_tokens - count_tokens_pos  ) + vocabSize
   println("denominator pos: " + sumlengthdpos + " denominator neg: " + sumlengthdneg )
 
 
