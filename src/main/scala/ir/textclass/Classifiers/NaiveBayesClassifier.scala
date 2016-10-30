@@ -20,13 +20,15 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   println ("nr of docs in class: "+ xmldocspos.length)
   println ("nr of docs not in class: "+ xmldocsneg.length)
 
-  /*Calculate p(c) for the two classes and store it in a map (perhaps there are better structures)*/
-  //var pc = Map("cpos" -> 1.0, "cneg" -> 0.0)
+  // Comment Ralph: I changed this as the previous version crashed!
+  /*Calculate p(c) for the two classes and store it in a map*/
   var pc = Map[String, Double]()
+  val prior_pos = reuters_train.stream.filter(_.codes(code)).length.toDouble / n
+  val prior_neg = 1 - prior_pos
   var npos = xmldocspos.length
-  pc = pc + ("cpos" -> npos.toDouble / n)
-  pc = pc + ("cneg" -> (1 - npos.toDouble / n))
-  //print(pc)
+  pc = pc + ("cpos" -> prior_pos)
+  pc = pc + ("cneg" -> prior_neg)
+  print(pc)
 
   /* Calculate and store the p(w|c) for the two classes and store the values in pwcpos and pwcnegwith alpha=1 smoothing
   * pwcpos map contains only tokens of the poitivedocuments */
