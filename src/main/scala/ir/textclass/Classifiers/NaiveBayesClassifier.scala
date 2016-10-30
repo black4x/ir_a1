@@ -7,7 +7,7 @@ import ch.ethz.dal.tinyir.processing.{Tokenizer, XMLDocument}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, val vocabSize:Long, val n:Long)  {
+class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, val vocabSize:Double, val n:Double)  {
 
   //var length: Long = 0
   //var tokens: List[String] = List()
@@ -17,15 +17,14 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   val xmldocspos = reuters_train.stream.filter(_.codes(code))
   val xmldocsneg = reuters_train.stream.filter(!_.codes(code))
 
-  println ("nr of docs in class: "+ xmldocspos.length)
-  println ("nr of docs not in class: "+ xmldocsneg.length)
+  //println ("nr of docs in class: "+ xmldocspos.length)
+  //println ("nr of docs not in class: "+ xmldocsneg.length)
 
   // Comment Ralph: I changed this as the previous version crashed!
   /*Calculate p(c) for the two classes and store it in a map*/
   var pc = Map[String, Double]()
   val prior_pos = reuters_train.stream.filter(_.codes(code)).length.toDouble / n
   val prior_neg = 1 - prior_pos
-  var npos = xmldocspos.length
   pc = pc + ("cpos" -> prior_pos)
   pc = pc + ("cneg" -> prior_neg)
   print(pc)

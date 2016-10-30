@@ -37,7 +37,7 @@ object TextCategorizationMain {
 
     // Comment Ralph: This statement takes 50 seconds to run but way better than using trainDoc.flatMap...
     val vocabSize = reuters_train.stream.flatMap(_.tokens).distinct.length
-    val n = reuters_train.length
+    val n = reuters_train.length.toDouble
 
     println("Vacabulary Size: " + vocabSize)
     println("Nr of Docs: " + n)
