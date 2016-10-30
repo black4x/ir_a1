@@ -29,11 +29,13 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   val tks_neg = reuters_train.stream.filter(!_.codes(code)).flatMap(_.tokens) // this is fast
 
   // Denominator
-  println("start calculating denominator pos")
+  myStopWatch.start
   val count_tokens_pos = tks_pos.length.toDouble
   val sumlengthdpos: Double = count_tokens_pos + vocabSize
   val sumlengthdneg: Double = (count_tokens - count_tokens_pos  ) + vocabSize
   println("denominator pos: " + sumlengthdpos + " denominator neg: " + sumlengthdneg )
+  myStopWatch.stop
+  println("Denominator calc done: " + myStopWatch.stopped)
 
 
   // Nominator (TODO: activated pwcneg once performance fixed
@@ -41,7 +43,7 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   val pwcpos = tks_pos.groupBy(identity).mapValues(l=>(l.length+1))
   //val pwcneg = tks_neg.groupBy(identity).mapValues(l=>(l.length+1)) // this crashes memory
   myStopWatch.stop
-  println("Nominator calc done in: " + myStopWatch.stopped)
+  println("Nominator calc done: " + myStopWatch.stopped)
 
   println("the size of pwcpos is :" + pwcpos.size)
 
