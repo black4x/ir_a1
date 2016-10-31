@@ -50,25 +50,40 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
 
 
   /*Returns the two class probabilities. The bigger one should be picked if only interested in the class*/
-  def prediction(xmlDoc: XMLDocument): ((String, Double), (String, Double)) = {
-
+  def prediction(doc_to_classify: XMLDocument): Boolean = {
 
     var cpos = scala.math.log(pc("cpos"))
     var cneg = scala.math.log(pc("cneg"))
-    //print(xmlDoc.content)
-    /*Calculate likelihood of d for pos */
 
-    //cpos = Tokenizer.tokenize(xmlDoc.content).map(tkn => scala.math.log(pwcpos.getOrElse(tkn, 1) / sumlengthdpos)).sum
-    //cpos = Tokenizer.tokenize(xmlDoc.content).map(tkn => scala.math.log(pwcneg.getOrElse(tkn, 1) / sumlengthdneg)).sum
 
-    //(("cpos", cpos), ("cneg", cneg))
-    (("cpos", 0.9), ("cneg", 0.1)) //todo: this is just a dummy to be removed later
+    // Calculate positive probability of document being in class.
+    var cdpos: Double = cpos + Tokenizer.tokenize(doc_to_classify.content).map(tkn => scala.math.log(pwcpos.getOrElse(tkn, 1) / sumlengthdpos)).sum
+
+    // Calcualte negative probability
+    // todo: For the negative probabily it is calcualted on-the-fly and not read from the training data
+    // todo: the reasons is that with so many negative tokens it could not be stored without memory overflow.
+    var cdneg: Double = Tokenizer.tokenize(doc_to_classify.content).map(tkn => train_negative_onthefly(tkn)).reduce(_ + _)
+    // var cdneg: Double = cneg + Tokenizer.tokenize(doc_to_classify.content).map(tkn => scala.math.log(pwcneg.getOrElse(tkn, 1) / sumlengthdpos)).sum
+
+    println("cdpos: " + cdpos + " cdneg: " + cdneg)
+    if (cdpos >= cdneg) true else false
+
+    // (("cpos", 0.9), ("cneg", 0.1))
     //max(cpos, cneg)
-
 
   }
 
+  def train_negative_onthefly(tkn: String): Double = {
+    var pwcneg: Double = math.log(( tks_neg.count(_ == tkn) + 1 ) / sumlengthdneg)
+    println(tkn + " " + pwcneg) //todo remove
+    return pwcneg
+  }
+
+
 }
+
+
+
 
 //var length: Long = 0
 //var tokens: List[String] = List()

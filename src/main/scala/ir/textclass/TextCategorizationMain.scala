@@ -1,8 +1,12 @@
 package ir.textclass
 
-import ch.ethz.dal.tinyir.io.ReutersRCVStream
+import ch.ethz.dal.tinyir.io.{DirStream, ReutersRCVStream}
+import ch.ethz.dal.tinyir.processing.ReutersRCVParse
 import ch.ethz.dal.tinyir.util.StopWatch
 import ir.textclass.Classifiers.NaiveBayesClassifier
+
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 
 object TextCategorizationMain {
@@ -55,26 +59,52 @@ object TextCategorizationMain {
 
     println(model)
 
-    // todo: read test docs and call prediction method
+    myStopWatch.stop
+    println("Training done : " + myStopWatch.stopped)
 
-    //    if( cpos >= cneg){
-    //      //vr_labels_found += vr_label
-    //      println("label found: " + vr_label)
-    //    }
-    //    // add all labels found for the current document to the map
-    //    vr_result +=  (vr_doc_id -> vr_labels_found)
-    //
-    //    vr_result foreach {case (key, value) => {
-    //      print (key + " ")
-    //      value.foreach(label => print(label + " "))
-    //    }
-    //    }
-    //    println(" ")
-    //
-    //
+    println("Start of Test")
+    myStopWatch.start
+
+    // TODO: For tests only!: without Zip file in order to run it for just a small number of files
+    // TODO: Replace later with the Test Doc Zip Folder. If you test it change the path to your folder!
+    val path_validate : String = "/Users/Ralph/Development/ETH/Information Retrieval/Project 1/validateSmall"
+    val stream_validate = new DirStream (path_validate, ".xml")
+    println("Number of files in directory = " + stream_validate.length)
+
+    var result = mutable.Map[String, ListBuffer[String]]()  // Doc ID + List of Labels
+    var labels_found = ListBuffer[String]()
+
+    // For each test document call the prediction method previously trained for each label
+    for (doc_validate <- stream_validate.stream.map(inputStream => new ReutersRCVParse(inputStream))) {
+
+      println("classifying document: " + doc_validate.title)
+      model.foreach(label => {
+
+        if (label._2.prediction(doc_validate) == true){
+          labels_found += label._1 // first column of Map is the label/code
+          println("label found: " + label._1)
+        }
+
+      })
+
+      // Add current document to the result with all labels predicted
+      result +=  (doc_validate.title -> labels_found)
+      labels_found.remove(0, labels_found.length) //initialize list before next loop
+    }
+
+    // Todo: write into file
+    // Print results
+    result foreach {case (key, value) => {
+      print (key + " ")
+      value.foreach(label => print(label + " "))
+    }
+      println(" ") // seprate labels per document by space
+    }
 
     myStopWatch.stop
-    println("Runtime: " + myStopWatch.stopped)
+    println("Test done: " + myStopWatch.stopped)
+
+
 
   }
 
