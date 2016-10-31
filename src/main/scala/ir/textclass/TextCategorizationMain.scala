@@ -71,7 +71,7 @@ object TextCategorizationMain {
     val stream_validate = new DirStream (path_validate, ".xml")
     println("Number of files in directory = " + stream_validate.length)
 
-    var result = mutable.Map[String, ListBuffer[String]]()  // Doc ID + List of Labels
+    var result = mutable.Map[String, List[String]]()  // Doc ID + List of Labels
     var labels_found = ListBuffer[String]()
 
     // For each test document call the prediction method previously trained for each label
@@ -88,7 +88,7 @@ object TextCategorizationMain {
       })
 
       // Add current document to the result with all labels predicted
-      result +=  (doc_validate.title -> labels_found)
+      result +=  (doc_validate.title -> labels_found.toList)
       labels_found.remove(0, labels_found.length) //initialize list before next loop
     }
 
