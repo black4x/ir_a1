@@ -10,44 +10,42 @@ object TestRead extends App {
   type Vocab = Map[String, Int]
 
   // adding operations to Vocab Type
-  implicit class VocabOperations (x: Vocab) {
+  implicit class VocabOperations (vocab: Vocab) {
     // summing all values in Map
-    def sumOccurrences() = x.foldLeft(0)(_ + _._2)
+    def sumOccurrences() = vocab.foldLeft(0)(_ + _._2)
   }
+
+  def mergeMap(ms: List[Vocab])(f: (Int, Int) => Int): Vocab =
+    (Map[String, Int]() /: (for (m <- ms; kv <- m) yield kv)) { (a, kv) =>
+      a + (if (a.contains(kv._1)) kv._1 -> f(a(kv._1), kv._2) else kv)
+    }
 
   def createVocabFromDoc(doc: XMLDocument): Vocab = Tokenizer.tokenize(doc.content).groupBy(identity).mapValues(_.size)
 
-  val reuters = new ReutersRCVStream("/home/ajuodelis/eth/ir/data_mini/train")
+  val reuters = new ReutersRCVStream("/home/ajuodelis/eth/ir/data_real/train")
   println("# of files in zip = " + reuters.length)
 
   val watch = new StopWatch()
   watch.start
 
-  val docVocabs = reuters.stream.map(doc => doc.name -> createVocabFromDoc(doc)).toMap
+  val allDocsVocabs = reuters.stream.map(doc => doc.name -> createVocabFromDoc(doc)).toMap
 
-  val totalTokens = docVocabs.foldLeft(0)(_ + _._2.sumOccurrences)
+  val totalTokens = allDocsVocabs.foldLeft(0)(_ + _._2.sumOccurrences)
+  val allVocab = mergeMap(allDocsVocabs.values.toList)((v1, v2) => v1 + v2)
 
   watch.stop
+  println(watch.stopped)
+
   // real:
   //  9216727
   //  178069
-
-
-  //val vocabSize = reuters.stream.flatMap(_.tokens).distinct.length
-  //val count_tokens = reuters.stream.flatMap(_.tokens).length
-  println(watch.stopped)
-
-  //  println(tokensMap.last)
-
-  //println("# of docs im map = " + tokensMap.size)
-  //println("# all tokens = " + allTokensNumber)
-  //println("# distinct tokens = " + distinctMap.size)
 
   // for mini
   //# all tokens = 1244
   //# distinct tokens = 602
 
-  //val ms = List(Map("hello" -> 1.1, "world" -> 2.2), Map("goodbye" -> 3.3, "hello" -> 4.4))
-  //val mm = mergeMap(ms)((v1, v2) => v1 + v2)
-}
+  println("# of docs im map = " + allDocsVocabs.size)
+  println("# all tokens = " + totalTokens)
+  println("# distinct tokens = " + allVocab.size)
 
+}
