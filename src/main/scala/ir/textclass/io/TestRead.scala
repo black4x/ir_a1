@@ -2,22 +2,36 @@ package ir.textclass.io
 
 import ch.ethz.dal.tinyir.io.ReutersRCVStream
 import ch.ethz.dal.tinyir.processing.Tokenizer
+import ch.ethz.dal.tinyir.util.StopWatch
 
-class TestRead {
-
-  var length : Long = 0
-  var tokens : Long = 0
-
-  val path : String = "/Users/Ralph/Development/ETH/Information Retrieval/Project 1/zips"
-  val reuters = new ReutersRCVStream(path)
-  println("Number of files in zips = " + reuters.length)
-  for (doc <- reuters.stream) {
-    length += doc.content.length
-    tokens += Tokenizer.tokenize(doc.content).length
-  }
-  println("Total number of characters = " + length)
+object TestRead extends App {
 
 
-  println(" Total number of tokens     = " + tokens)
+  val reuters = new ReutersRCVStream("/home/ajuodelis/eth/ir/data_mini/train")
+  println("# of files in zip = " + reuters.length)
+
+  val watch = new StopWatch()
+  watch.start
+  val tokensMap = reuters.stream.map(doc => {
+    doc.name -> Tokenizer.tokenize(doc.content).groupBy(identity).mapValues(_.size)
+  }).toMap
+
+  val allTokensNumber = tokensMap.foldLeft(0)(_ + _._2.foldLeft(0)(_ + _._2))
+
+  watch.stop
+// real:
+//  9216727
+//  178069
+
+
+  //val vocabSize = reuters.stream.flatMap(_.tokens).distinct.length
+  //val count_tokens = reuters.stream.flatMap(_.tokens).length
+  //println("took time = " + watch.stopped)
+
+  println(tokensMap.last)
+
+//  println("# of docs im map = " + tokensMap.size)
+//  println("# all tokens = " + allTokensNumber)
+//  //println("# distinct tokens = " + distinctTokensNumber)
 
 }
