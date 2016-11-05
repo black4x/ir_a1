@@ -24,7 +24,6 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
 
   /* Calculate and store the p(w|c) for the two classes and store the values in pwcpos and pwcnegwith alpha=1 smoothing
      pwcpos map contains only tokens of the poitive documents */
-
   val tks_pos = reuters_train.stream.filter(_.codes(code)).flatMap(_.tokens) // this is fast
   val tks_neg = reuters_train.stream.filter(!_.codes(code)).flatMap(_.tokens) // this is fast
 
@@ -38,14 +37,12 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   println("Denominator calc done: " + myStopWatch.stopped)
 
 
-  // Nominator (TODO: activated pwcneg once performance fixed
+  // Nominator TODO: performance improvement
   myStopWatch.start
   val pwcpos = tks_pos.groupBy(identity).mapValues(l=>(l.length+1))
-  //val pwcneg = tks_neg.groupBy(identity).mapValues(l=>(l.length+1)) // this crashes memory
+  val pwcneg = tks_neg.groupBy(identity).mapValues(l=>(l.length+1)) // this crashes memory
   myStopWatch.stop
   println("Nominator calc done: " + myStopWatch.stopped)
-
-  println("the size of pwcpos is :" + pwcpos.size)
 
 
 
@@ -59,25 +56,22 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
     var cdpos: Double = cpos + Tokenizer.tokenize(doc_to_classify.content).map(tkn => scala.math.log(pwcpos.getOrElse(tkn, 1) / sumlengthdpos)).sum
 
     // Calcualte negative probability
-    // todo: For the negative probabily it is calcualted on-the-fly and not read from the training data
-    // todo: the reasons is that with so many negative tokens it could not be stored without memory overflow.
-    var cdneg: Double = Tokenizer.tokenize(doc_to_classify.content).map(tkn => train_negative_onthefly(tkn)).reduce(_ + _)
-    // var cdneg: Double = cneg + Tokenizer.tokenize(doc_to_classify.content).map(tkn => scala.math.log(pwcneg.getOrElse(tkn, 1) / sumlengthdneg)).sum
+    var cdneg: Double = cneg + Tokenizer.tokenize(doc_to_classify.content).map(tkn => scala.math.log(pwcneg.getOrElse(tkn, 1) / sumlengthdneg)).sum
 
     println("cdpos: " + cdpos + " cdneg: " + cdneg)
     if (cdpos >= cdneg) true else false
 
   }
 
-  def train_negative_onthefly(tkn: String): Double = {
-    math.log(( tks_neg.count(_ == tkn) + 1 ) / sumlengthdneg)
-  }
+
 
 
 }
-
-
-
+  /*
+def train_negative_onthefly(tkn: String): Double = {
+  math.log(( tks_neg.count(_ == tkn) + 1 ) / sumlengthdneg)
+}
+*/
 
 //var length: Long = 0
 //var tokens: List[String] = List()
