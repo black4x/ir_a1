@@ -77,7 +77,7 @@ object TextCategorizationMain {
     // For each test document call the prediction method previously trained for each label
     for (doc_validate <- stream_validate.stream.map(inputStream => new ReutersRCVParse(inputStream))) {
 
-      println("classifying document: " + doc_validate.title)
+      println("classifying document: " + doc_validate.name)
       model.foreach(label => {
 
         if (label._2.prediction(doc_validate) == true){
@@ -88,7 +88,7 @@ object TextCategorizationMain {
       })
 
       // Add current document to the result with all labels predicted
-      result +=  (doc_validate.title -> labels_found.toList)
+      result +=  (doc_validate.name -> labels_found.toList)
       labels_found.remove(0, labels_found.length) //initialize list before next loop
     }
 
