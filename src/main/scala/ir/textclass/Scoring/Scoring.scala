@@ -28,24 +28,42 @@ class Scoring(val reuters_validate:ReutersRCVStream, val result_classifier: Map[
   private def calculateF1PerDoc(vali_doc: XMLDocument): Double = {
 
     val labels_correct = vali_doc.codes
+    println("codes of validation doc " + labels_correct + " " + labels_correct.size)
+    println("F1 for doc" + vali_doc.name)
     val labels_predicted = result_classifier(vali_doc.name)
+    println("labels predicted" + labels_predicted.size)
     val nr_labels_predicted = labels_predicted.size
-    if (nr_labels_predicted == 0) return 0.0
+    if (nr_labels_predicted == 0) {
+      println("no labels" + nr_labels_predicted)
+      return 0.0
+    }
+    else {
 
-    // Count how many predicted labels are actually in the validation document
-    var nr_labels_classified_correct = 0
-    val nr_labels_correct = labels_predicted.foreach(label_predicted => {
-      if (labels_correct.exists(label => label == label_predicted)){
-        nr_labels_classified_correct += 1
+      // Count how many predicted labels are actually in the validation document
+      var nr_labels_classified_correct = 0
+      labels_predicted.foreach(label_predicted => {
+        if (labels_correct.exists(label => label == label_predicted)) {
+          nr_labels_classified_correct += 1
+        }
+      })
+
+      println("correct prediction: " + nr_labels_classified_correct)
+
+      val percision = nr_labels_classified_correct / nr_labels_predicted
+      val recall = nr_labels_classified_correct / labels_correct.size
+
+      println("per and recall " + percision + " " + recall)
+      if(percision + recall == 0){
+        return 0.0
       }
-    })
-
-    val percision = nr_labels_classified_correct / nr_labels_predicted
-    val recall = nr_labels_classified_correct / labels_correct.size
-
-    return (2 * percision * recall) / (percision + recall)
+      else {
+        return (2 * percision * recall) / (percision + recall)
+      }
+    }
 
   }
 
-}
+
+
+  }
 
