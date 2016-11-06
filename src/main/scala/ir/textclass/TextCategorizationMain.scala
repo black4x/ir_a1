@@ -4,6 +4,7 @@ import ch.ethz.dal.tinyir.io.{DirStream, ReutersRCVStream}
 import ch.ethz.dal.tinyir.processing.ReutersRCVParse
 import ch.ethz.dal.tinyir.util.StopWatch
 import ir.textclass.Classifiers.NaiveBayesClassifier
+import ir.textclass.Scoring.Scoring
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -91,6 +92,15 @@ object TextCategorizationMain {
       result +=  (doc_validate.name -> labels_found.toList)
       labels_found.remove(0, labels_found.length) //initialize list before next loop
     }
+
+    // F1 Scoring for validation docs
+    myStopWatch.start
+    val score = new Scoring(reuters_train, result)
+    val f1Score = score.calculateF1()
+    println("The F1 Score is: " + f1Score)
+    myStopWatch.stop
+    println("Scoring : " + myStopWatch.stopped)
+
 
     // Todo: write into file
     // Print results
