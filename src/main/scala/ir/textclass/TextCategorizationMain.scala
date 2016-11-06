@@ -34,6 +34,8 @@ object TextCategorizationMain {
 
 
     val reuters_train = new ReutersRCVStream("/home/ajuodelis/eth/ir/project1/train")
+    //todo: check this path
+    val reuters_validate = new ReutersRCVStream("/home/ajuodelis/eth/ir/project1/validate")
     //val test = new ReutersRCVStream("/home/ajuodelis/eth/ir/project1/test")
 
     // Comment Ralph:
@@ -66,17 +68,12 @@ object TextCategorizationMain {
     println("Start of Test")
     myStopWatch.start
 
-    // TODO: For tests only!: without Zip file in order to run it for just a small number of files
-    // TODO: Replace later with the Test Doc Zip Folder. If you test it change the path to your folder!
-    val path_validate : String = "/Users/Ralph/Development/ETH/Information Retrieval/Project 1/validateSmall"
-    val stream_validate = new DirStream (path_validate, ".xml")
-    println("Number of files in directory = " + stream_validate.length)
 
     var result = mutable.Map[String, List[String]]()  // Doc ID + List of Labels
     var labels_found = ListBuffer[String]()
 
     // For each test document call the prediction method previously trained for each label
-    for (doc_validate <- stream_validate.stream.map(inputStream => new ReutersRCVParse(inputStream))) {
+    for (doc_validate <- reuters_validate.stream) {
 
       println("classifying document: " + doc_validate.name)
       model.foreach(label => {
@@ -95,7 +92,7 @@ object TextCategorizationMain {
 
     // F1 Scoring for validation docs
     myStopWatch.start
-    val score = new Scoring(reuters_train, result)
+    val score = new Scoring(reuters_validate, result)
     val f1Score = score.calculateF1()
     println("The F1 Score is: " + f1Score)
     myStopWatch.stop
@@ -113,7 +110,6 @@ object TextCategorizationMain {
 
     myStopWatch.stop
     println("Test done: " + myStopWatch.stopped)
-
 
 
   }

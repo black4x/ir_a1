@@ -64,9 +64,9 @@ class NaiveBayesClassifier(val reuters_train:ReutersRCVStream, val code:String, 
   }
 
 
-
-
 }
+
+
   /*
 def train_negative_onthefly(tkn: String): Double = {
   math.log(( tks_neg.count(_ == tkn) + 1 ) / sumlengthdneg)
