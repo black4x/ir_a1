@@ -65,9 +65,9 @@ object TextCategorizationMain {
     myStopWatch.stop
     println("Training done : " + myStopWatch.stopped)
 
+
     println("Start of Test")
     myStopWatch.start
-
 
     var result = mutable.Map[String, List[String]]()  // Doc ID + List of Labels
     var labels_found = ListBuffer[String]()
