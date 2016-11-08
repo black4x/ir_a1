@@ -22,7 +22,7 @@ object TestRead extends App {
 
   def createVocabFromDoc(doc: XMLDocument): Vocab = Tokenizer.tokenize(doc.content).groupBy(identity).mapValues(_.size)
 
-  val reuters = new ReutersRCVStream("/home/ajuodelis/eth/ir/data_real/train")
+  val reuters = new ReutersRCVStream("/home/ajuodelis/eth/ir/data_mini/train")
   println("# of files in zip = " + reuters.length)
 
   val watch = new StopWatch()
