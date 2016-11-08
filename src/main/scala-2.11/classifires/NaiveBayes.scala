@@ -6,19 +6,17 @@ class NaiveBayes(val codesMap: Map[String, String], val trainPath: String) exten
   // parsing all training docs
   val stream = new ReutersRCVStream(trainPath).stream
 
-  // extracting vocabulary
-  val vocab = stream.flatMap(_.tokens).distinct
-
-  val vocabSize = vocab.length
+  // extracting distinct vocab size
+  val vocabSize = stream.flatMap(_.tokens).distinct.length
 
   // only for showing progress
   var i = 0
-  val l = codesMap.size
+  val codeSize = codesMap.size
 
   // for each code calc conditional probability
   val condProbPerCode = codesMap.map(code => {
     val docsWithLabel = stream.filter(_.codes(code._1))
-    //val labelPrior = docsWithLabel.length /
+    val codePrior = docsWithLabel.length / codeSize
     val tokensWithLabel = docsWithLabel.flatMap(_.tokens)
     val normalization = tokensWithLabel.length.toDouble + vocabSize
     // keep sparseness, no normalization here
@@ -27,12 +25,15 @@ class NaiveBayes(val codesMap: Map[String, String], val trainPath: String) exten
     val probMap = vocabFrequencyMapWithLabel.keys
       .map(word => word -> (vocabFrequencyMapWithLabel.getOrElse(word, 1.0) / normalization)).toMap
 
-    i = getProgress(i, l);
+    i = getProgress(i, codeSize);
 
-    code._1 -> probMap
+    code._1 -> (codePrior, probMap)
   })
 
-  println(condProbPerCode)
+  def predic (): Unit ={
+
+  }
+
 
   def getProgress(index: Int, len: Int): Int ={
     println("%.0f".format (i.toDouble*100/len))
