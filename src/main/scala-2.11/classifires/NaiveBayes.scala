@@ -16,18 +16,27 @@ class NaiveBayes(val codesMap: Map[String, String], val trainPath: String) exten
   // for each code calc conditional probability
   val condProbPerCode = codesMap.map(code => {
     val docsWithLabel = stream.filter(_.codes(code._1))
+    val docsWithLabelMinus = stream.filterNot(_.codes(code._1))
     val codePrior = docsWithLabel.length / codeSize
+    val codePriorMinus = docsWithLabelMinus.length / codeSize
     val tokensWithLabel = docsWithLabel.flatMap(_.tokens)
+    val tokensWithLabelMinus = docsWithLabelMinus.flatMap(_.tokens)
     val normalization = tokensWithLabel.length.toDouble + vocabSize
+    val normalizationMinus = tokensWithLabelMinus.length.toDouble + vocabSize
     // keep sparseness, no normalization here
     val vocabFrequencyMapWithLabel = tokensWithLabel.groupBy(identity).mapValues(l => (l.length + 1).toDouble)
+    val vocabFrequencyMapWithLabelMinus = tokensWithLabelMinus.groupBy(identity).mapValues(l => (l.length + 1).toDouble)
 
     val probMap = vocabFrequencyMapWithLabel.keys
       .map(word => word -> (vocabFrequencyMapWithLabel.getOrElse(word, 1.0) / normalization)).toMap
 
+    val probMapMinus = vocabFrequencyMapWithLabelMinus.keys
+      .map(word => word -> (vocabFrequencyMapWithLabelMinus.getOrElse(word, 1.0) / normalizationMinus)).toMap
+
+
     i = getProgress(i, codeSize);
 
-    code._1 -> (codePrior, probMap)
+    code._1 -> ((codePrior, probMap), (codePriorMinus, probMapMinus))
   })
 
   def predic (): Unit ={
