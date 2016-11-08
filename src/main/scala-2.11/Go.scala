@@ -1,12 +1,17 @@
-
+import ch.ethz.dal.tinyir.util.StopWatch
+import classifires.NaiveBayes
 
 object Go extends App {
+  val watch = new StopWatch()
+  val path = "/home/ajuodelis/eth/ir/data_mini";
 
+  val codesMap = Utils.getCodeValueMap(path + "/codes")
 
-  val codes = Utils.getCodeValueMap("/home/ajuodelis/eth/ir/data_mini/codes")
-  //1362
-  print(codes.size)
+  watch.start
 
-  //val naiveBayes = new NaiveBayes(codeMap, "/home/ajuodelis/eth/ir/data_mini/train")
+  val naiveBayes = new NaiveBayes(codesMap, path +"/train")
+
+  watch.stop
+  println(watch.stopped)
 
 }
