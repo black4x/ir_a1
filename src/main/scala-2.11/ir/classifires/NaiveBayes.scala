@@ -2,48 +2,65 @@ package ir.classifires
 
 
 import ch.ethz.dal.tinyir.processing.XMLDocument
+import ch.ethz.dal.tinyir.util.StopWatch
 import ir.IRUtils
 import ir.IRUtils.DocVector
 
 class NaiveBayes(val allVocabVectors: Map[String, DocVector], val allVocabSet: Set[String],
-                 val codesMap: Map[String, String], val stream: Stream[XMLDocument]) {
+                 val codesSet: Set[String], val stream: Stream[XMLDocument]) {
 
   // distinct vocab size
   val vocabSize = allVocabSet.size
 
+  val codeSize = codesSet.size
+
   // only for showing progress
   var i = 0
-  val codeSize = codesMap.size
+  val watch = new StopWatch()
 
   // for each code calc conditional probability
-  val condProbPerCode = codesMap.map(code => {
-    val (docsWithCode, docsWithoutCode) = stream.partition(_.codes(code._1))
+  val condProbPerCode = codesSet.map(code => {
 
-    val (codePriorWithCode, probMapWithCode) = calculateConditionalProbability(docsWithCode)
-    val (codePriorWithoutCode, probMapWithoutCode) = calculateConditionalProbability(docsWithoutCode)
+    watch.start
+
+    val (docsWithCode, docsWithoutCode) = stream.partition(_.codes(code))
+
+    //val (codePriorWithCode, probMapWithCode) = calculateConditionalProbability(docsWithCode)
+
+   //val (codePriorWithoutCode, probMapWithoutCode) =
+    calculateConditionalProbability(docsWithoutCode)
+
+    watch.stop
 
     i = getProgress(i, codeSize)
 
-    code._1 -> ((codePriorWithCode, probMapWithCode), (codePriorWithoutCode, probMapWithoutCode))
+    //code._1 -> ((codePriorWithCode, probMapWithCo
+    // de), (codePriorWithoutCode, probMapWithoutCode))
   })
 
-  def calculateConditionalProbability(stream: Stream[XMLDocument]): (Int, Map[String, Double]) ={
+  def calculateConditionalProbability(stream: Stream[XMLDocument]) = {
     val codePrior = stream.length / codeSize
     // getting only needed document vectors from given stream (stream contains only docs for a particular code)
-    val docsVectors = stream.map(doc => doc.name -> allVocabVectors.getOrElse(doc.name, Map[String, Int]())).toMap
-    val tokenSet = IRUtils.getSetOfDistinctTokens(docsVectors)
-    val normalization = IRUtils.totalSumCoordinates(docsVectors) + vocabSize
+
+    val l = stream.map(doc => allVocabVectors.getOrElse(doc.name, Map[String, Int]())).toList
+    val docsVectors = IRUtils.mergeAllDocs(l)
+
+    val normalization = IRUtils.sumDocVector(docsVectors) + vocabSize
+
     //val vocabFrequencyMap = tokens.groupBy(identity).mapValues(l => (l.length + 1).toDouble)
-    val probMap = tokenSet.map(token => token -> (IRUtils.sumByToken(token, docsVectors) / normalization)).toMap
+
+    val probMap = docsVectors.mapValues(sum => (sum + 1).toDouble / normalization)
+
     (codePrior, probMap)
-  }
-
-  def predict (): Unit ={
 
   }
 
-  private def getProgress(index: Int, len: Int): Int ={
-    println("%.0f".format (i.toDouble*100/len) + "% done")
+  def predict(): Unit = {
+
+  }
+
+  private def getProgress(index: Int, len: Int): Int = {
+    println("%.0f".format(i.toDouble * 100 / len) + "% done " + watch.stopped)
     i + 1
   }
 

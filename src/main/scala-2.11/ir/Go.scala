@@ -15,31 +15,31 @@ object Go extends App {
 
 
   val watch = new StopWatch()
-
-  val codesStream = new ZipDirStream(codesPath).stream
-
-  val codesMap = IRUtils.getCodeValueMap(codesStream)
-
   watch.start
 
-  val trainStream = new ReutersRCVStream(trainPath).stream.take(5000)
-  val allDocsVectors = IRUtils.getAllDocsVectors(trainStream)
+  val codesStream = new ZipDirStream(codesPath).stream
+  val trainStream = new ReutersRCVStream(trainPath).stream.take(50000)//!!! if change - have to delete cash
+
+  val codeSet =  IRUtils.readAllRealCodes(trainStream)
+  val allDocsVectors = IRUtils.readAllDocsVectors(trainStream)
+  val codesMap = IRUtils.getCodeValueMap(codesStream)
 
   // merging all tokens to one set
   val allVocabSet = IRUtils.getSetOfDistinctTokens(allDocsVectors)
 
-  println (allVocabSet.size)
-  println(IRUtils.totalSumCoordinates(allDocsVectors))
+  println("vocab size= " + allVocabSet.size)
+  println("all words size= " + IRUtils.totalSumCoordinates(allDocsVectors))
 
   watch.stop
-  println(watch.stopped)
+  println("init " + watch.stopped)
+  println("------------")
 
   watch.start
 
-  val naiveBayes = new NaiveBayes(allDocsVectors, allVocabSet, codesMap, trainStream)
+  val naiveBayes = new NaiveBayes(allDocsVectors, allVocabSet, codeSet, trainStream)
 
   watch.stop
-  println(watch.stopped)
+  println("done " + watch.stopped)
 
   //  9216727 ~ 9 Mill
   //  178069 ~ 180 K
