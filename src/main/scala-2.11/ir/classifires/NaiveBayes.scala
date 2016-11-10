@@ -2,6 +2,7 @@ package ir.classifires
 
 
 import ch.ethz.dal.tinyir.processing.XMLDocument
+import ir.IRUtils
 import ir.IRUtils.DocVector
 
 class NaiveBayes(val allVocabVectors: Map[String, DocVector], val allVocabSet: Set[String],
@@ -28,10 +29,12 @@ class NaiveBayes(val allVocabVectors: Map[String, DocVector], val allVocabSet: S
 
   def calculateConditionalProbability(stream: Stream[XMLDocument]): (Int, Map[String, Double]) ={
     val codePrior = stream.length / codeSize
-    val tokens = stream.flatMap(_.tokens)
-    val normalization = tokens.length.toDouble + vocabSize
-    val vocabFrequencyMap = tokens.groupBy(identity).mapValues(l => (l.length + 1).toDouble)
-    val probMap = vocabFrequencyMap.keys.map(word => word -> (vocabFrequencyMap.getOrElse(word, 1.0) / normalization)).toMap
+    // getting only needed document vectors from given stream (stream contains only docs for a particular code)
+    val docsVectors = stream.map(doc => doc.name -> allVocabVectors.getOrElse(doc.name, Map[String, Int]())).toMap
+    val tokenSet = IRUtils.getSetOfDistinctTokens(docsVectors)
+    val normalization = IRUtils.totalSumCoordinates(docsVectors) + vocabSize
+    //val vocabFrequencyMap = tokens.groupBy(identity).mapValues(l => (l.length + 1).toDouble)
+    val probMap = tokenSet.map(token => token -> (IRUtils.sumByToken(token, docsVectors) / normalization)).toMap
     (codePrior, probMap)
   }
 

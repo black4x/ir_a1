@@ -22,11 +22,11 @@ object Go extends App {
 
   watch.start
 
-  val trainStream = new ReutersRCVStream(trainPath).stream.take(100)
+  val trainStream = new ReutersRCVStream(trainPath).stream.take(5000)
   val allDocsVectors = IRUtils.getAllDocsVectors(trainStream)
 
   // merging all tokens to one set
-  val allVocabSet = allDocsVectors.values.foldLeft(Set[String]())((curr, docVector)=> curr ++ docVector.keySet)
+  val allVocabSet = IRUtils.getSetOfDistinctTokens(allDocsVectors)
 
   println (allVocabSet.size)
   println(IRUtils.totalSumCoordinates(allDocsVectors))

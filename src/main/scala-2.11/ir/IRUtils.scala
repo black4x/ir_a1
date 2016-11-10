@@ -16,13 +16,26 @@ object IRUtils {
     def sumCoordinates(): Int = vector.foldLeft(0)(_ + _._2)
   }
 
+  def sumWithLaplase(curr: Double, coord: Option[Int]): Double = coord match {
+    case Some(i) => curr + i.toDouble + 1.0
+    case None => curr + 1.0
+  }
+
   def getDocVector(doc: XMLDocument): DocVector = StopWords.filterOutSW(Tokenizer.tokenize(doc.content))
     .map(token => PorterStemmer.stem(token))
     .groupBy(identity).mapValues(_.size)
 
-  def getAllDocsVectors(stream: Stream[XMLDocument]): Map[String, DocVector] = stream.map(doc => doc.name -> getDocVector(doc)).toMap
+  def getAllDocsVectors(stream: Stream[XMLDocument]): Map[String, DocVector] =
+    stream.map(doc => doc.name -> getDocVector(doc)).toMap
 
-  def totalSumCoordinates(allDocsVector: Map[String, DocVector]): Int = allDocsVector.foldLeft(0)(_ + _._2.sumCoordinates)
+  def totalSumCoordinates(docsVector: Map[String, DocVector]): Int =
+    docsVector.foldLeft(0)(_ + _._2.sumCoordinates)
+
+  def sumByToken(token: String, docsVector: Map[String, DocVector]): Double =
+    docsVector.foldLeft(0.0)((currentSum, item) => sumWithLaplase(currentSum, item._2.get(token)))
+
+  def getSetOfDistinctTokens(docsVectors: Map[String, DocVector]) =
+    docsVectors.values.foldLeft(Set[String]())((curr, docVector) => curr ++ docVector.keySet)
 
   /**
     * Creates Map with Code Definitions from zip files from given stream
