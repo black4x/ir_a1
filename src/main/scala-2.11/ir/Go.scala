@@ -13,14 +13,15 @@ object Go extends App {
   val codesPath = baseDir + "/codes"
   val trainPath = baseDir + "/train"
   val testPath = baseDir + "/test"
+  val validationPath = baseDir + "/validation"
 
   val watch = new StopWatch()
   watch.start
 
   val codesStream = new ZipDirStream(codesPath).stream
-  val testStream = new ReutersRCVStream(testPath).stream//.take(10000)
+  //val testStream = new ReutersRCVStream(testPath).stream//.take(10000)
   val trainStream = new ReutersRCVStream(trainPath).stream.take(50000)//!!! if change - have to delete cash
-
+  val validationStream = new ReutersRCVStream(validationPath).stream
 
   val codeSet =  IRUtils.readAllRealCodes(trainStream)
   val allDocsVectors = IRUtils.readAllDocsVectors(trainStream)
@@ -32,7 +33,7 @@ object Go extends App {
 
   println("vocab size= " + vocabSize)
   println("all words size = " + IRUtils.totalSumCoordinates(allDocsVectors))
-  println("test files zise = " + testStream.length)
+  println("test files zise = " + validationStream.length)
 
   watch.stop
   println("init complete " + watch.stopped)
@@ -40,7 +41,7 @@ object Go extends App {
 
   watch.start
 
-  val naiveBayes = new NaiveBayes(vocabSize, vocab, allDocsVectors, codeSet, trainStream, testStream)
+  val naiveBayes = new NaiveBayes(vocabSize, vocab, allDocsVectors, codeSet, trainStream, validationStream)
 
   watch.stop
   println("done " + watch.stopped)
