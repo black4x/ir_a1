@@ -12,6 +12,7 @@ object Go extends App {
   val codesPath = baseDir + "/codes"
   val trainPath = baseDir + "/train"
   val testPath = baseDir + "/test"
+  val validationPath = baseDir + "/validation"
 
   val watch = new StopWatch()
   watch.start
@@ -19,6 +20,7 @@ object Go extends App {
   val codesStream = new ZipDirStream(codesPath).stream
   val testStream = new ReutersRCVStream(testPath).stream//.take(10000)
   val trainStream = new ReutersRCVStream(trainPath).stream.take(50000)//!!! if change - have to delete cash
+  val validationStream = new ReutersRCVStream(validationPath)
 
   val codeSet =  IRUtils.readAllRealCodes(trainStream)
   val allDocsVectors = IRUtils.readAllDocsVectors(trainStream)
