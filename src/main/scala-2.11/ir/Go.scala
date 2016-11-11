@@ -2,7 +2,7 @@ package ir
 
 import ch.ethz.dal.tinyir.io.{ReutersRCVStream, ZipDirStream}
 import ch.ethz.dal.tinyir.util.StopWatch
-import ir.classifires.NaiveBayes
+import ir.classifires.{NaiveBayes, SVM}
 
 object Go extends App {
 
@@ -42,6 +42,20 @@ object Go extends App {
 
   watch.stop
   println("done " + watch.stopped)
+
+  val lambda=0.01
+  val steps=10000
+
+  val trainDocsFiltered=trainStream.filter(_.codes("M13"))
+  val allTrainy=trainDocsFiltered.map(doc => doc.name ->1).toMap
+
+  //val allValVectors = xmlValDocs.map(doc => doc.name -> createVectorFromDoc(doc)).toMap
+
+  //SVM: Geht ca 175.72737288 sec.
+  val svmClassifier= new SVM(allDocsVectors,trainStream,lambda,steps)
+
+
+
 
   //  9216727 ~ 9 Mill
   //  178069 ~ 180 K
