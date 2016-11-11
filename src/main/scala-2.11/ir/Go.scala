@@ -1,6 +1,7 @@
 package ir
 
 import ch.ethz.dal.tinyir.io.{ReutersRCVStream, ZipDirStream}
+import ch.ethz.dal.tinyir.processing.{StopWords, Tokenizer, XMLDocument}
 import ch.ethz.dal.tinyir.util.StopWatch
 import ir.classifires.{NaiveBayes, SVM}
 
@@ -19,6 +20,7 @@ object Go extends App {
   val codesStream = new ZipDirStream(codesPath).stream
   val testStream = new ReutersRCVStream(testPath).stream//.take(10000)
   val trainStream = new ReutersRCVStream(trainPath).stream.take(50000)//!!! if change - have to delete cash
+
 
   val codeSet =  IRUtils.readAllRealCodes(trainStream)
   val allDocsVectors = IRUtils.readAllDocsVectors(trainStream)
@@ -43,16 +45,20 @@ object Go extends App {
   watch.stop
   println("done " + watch.stopped)
 
+
+
+  def createVectorFromDoc(doc: XMLDocument): Map[String,Int] = StopWords.filterOutSW(Tokenizer.tokenize(doc.content)).groupBy(identity).mapValues(_.size)
+
   val lambda=0.01
   val steps=10000
 
   val trainDocsFiltered=trainStream.filter(_.codes("M13"))
   val allTrainy=trainDocsFiltered.map(doc => doc.name ->1).toMap
 
-  val allValVectors = xmlValDocs.map(doc => doc.name -> createVectorFromDoc(doc)).toMap
+  //val allValVectors = validateStream.map(doc => doc.name -> createVectorFromDoc(doc)).toMap
 
   //SVM: Geht ca 175.72737288 sec.
-  val svmClassifier= new SVM(allDocsVectors,trainStream,lambda,steps)
+  val svmClassifier= new SVM(allDocsVectors,allTrainy,lambda,steps)
 
 
 
