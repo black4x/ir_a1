@@ -13,7 +13,6 @@ object Go extends App {
   val trainPath = baseDir + "/train"
   val testPath = baseDir + "/test"
 
-
   val watch = new StopWatch()
   watch.start
 
@@ -22,21 +21,22 @@ object Go extends App {
 
   val codeSet =  IRUtils.readAllRealCodes(trainStream)
   val allDocsVectors = IRUtils.readAllDocsVectors(trainStream)
-  val codesMap = IRUtils.getCodeValueMap(codesStream)
+  //val codesMap = IRUtils.getCodeValueMap(codesStream)
 
-  // merging all tokens to one set
-  val allVocabSet = IRUtils.getSetOfDistinctTokens(allDocsVectors)
+  // merging all vocab to one set
+  val vocab = IRUtils.getSetOfDistinctTokens(allDocsVectors)
+  val vocabSize = vocab.size
 
-  println("vocab size= " + allVocabSet.size)
-  println("all words size= " + IRUtils.totalSumCoordinates(allDocsVectors))
+  println("vocab size= " + vocabSize)
+  println("all words size = " + IRUtils.totalSumCoordinates(allDocsVectors))
 
   watch.stop
-  println("init " + watch.stopped)
+  println("init complete " + watch.stopped)
   println("------------")
 
   watch.start
 
-  val naiveBayes = new NaiveBayes(allDocsVectors, allVocabSet, codeSet, trainStream)
+  val naiveBayes = new NaiveBayes(vocabSize, vocab, allDocsVectors, codeSet, trainStream)
 
   watch.stop
   println("done " + watch.stopped)
