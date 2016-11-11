@@ -17,7 +17,7 @@ object Go extends App {
   watch.start
 
   val codesStream = new ZipDirStream(codesPath).stream
-  val testStream = new ReutersRCVStream(testPath).stream.take(10)
+  val testStream = new ReutersRCVStream(testPath).stream.take(10000)
   val trainStream = new ReutersRCVStream(trainPath).stream.take(50000)//!!! if change - have to delete cash
 
   val codeSet =  IRUtils.readAllRealCodes(trainStream)
