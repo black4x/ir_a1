@@ -2,9 +2,11 @@ package ir
 
 import java.io.{File, FileInputStream, InputStream, PrintWriter}
 
+import ch.ethz.dal.tinyir.io.ReutersRCVStream
 import ch.ethz.dal.tinyir.processing.{StopWords, Tokenizer, XMLDocument}
 import com.github.aztek.porterstemmer.PorterStemmer
 import com.lambdaworks.jacks.JacksMapper
+import ir.textclass.Scoring.Scoring
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source._
@@ -96,6 +98,19 @@ object IRUtils {
     }
     }
     bw.close()
+  }
+
+  def readResultFile(file: File): Map[String, List[String]] =
+    scala.io.Source.fromFile(file).getLines().map(line => {
+      val tokents = line.split(" ")
+      val name = tokents.head
+      val codes = tokents.tail.toList
+      (name, codes)
+    }).toMap
+
+  def printScore(validationStream: ReutersRCVStream): Unit = {
+    val score = new Scoring(validationStream, IRUtils.readResultFile(new File("bayes.txt")))
+    println(score.calculateF1())
   }
 
   /**
