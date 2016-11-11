@@ -10,7 +10,9 @@ import ir.IRUtils.DocVector
 class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
                  val allDocsVectors: Map[String, DocVector],
                  codeSet: Set[String],
-                 stream: Stream[XMLDocument]) {
+                 trainStream: Stream[XMLDocument],
+                 testStream: Stream[XMLDocument]
+                ) {
 
   // only for showing progress **** TODO remove later ?
   val codeSize = codeSet.size
@@ -18,17 +20,15 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
   val watch = new StopWatch()
   // *** END
 
-//
-  //
-  //
+
   //val stest = Set("I33020", "GCRIM", "THAIL")
 
   // for each code calc conditional probability
-  val condProbPerCode = codeSet.map(code => {
+  val condProbPerCode = codeSet.foreach(code => {
 
     watch.start
 
-    val (docsWithCode, docsWithoutCode) = stream.partition(_.codes(code))
+    val (docsWithCode, docsWithoutCode) = trainStream.partition(_.codes(code))
 
     val (codePriorWithCode, probMapWithCode) = calculateConditionalProbability(docsWithCode)
 
@@ -38,20 +38,20 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
 
     i = getProgress(i, codeSize, code)
 
-    code -> ((codePriorWithCode, probMapWithCode), (codePriorWithoutCode, probMapWithoutCode))
+   // code -> ((codePriorWithCode, probMapWithCode), (codePriorWithoutCode, probMapWithoutCode))
   })
 
-  def calculateConditionalProbability(streamWithCode: Stream[XMLDocument]) = {
+  def calculateConditionalProbability(oneClassStream: Stream[XMLDocument]) = {
 
-    val docsSet = streamWithCode.map(doc => doc.name).toSet
+    val docsSet = oneClassStream.map(doc => doc.name).toSet
     val codePrior = docsSet.size.toDouble / vocabSize
 
     val vocabWithCode = IRUtils.mergeVocab(allDocsVectors.filterKeys(docsSet))
     println(vocabWithCode.size)
 
-    val normalization = vocabWithCode.values.par.sum + vocabSize
+    val normalization = (vocabWithCode.values.par.sum + vocabSize).toDouble
 
-    val condProbMap = vocab.map(token => token -> (vocabWithCode.getOrElse(token, 0) + 1) / normalization.toDouble)
+    val condProbMap = vocab.map(token => token -> (vocabWithCode.getOrElse(token, 0) + 1) / normalization)
 
     (codePrior, condProbMap)
   }
@@ -61,7 +61,7 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
   }
 
   private def getProgress(index: Int, len: Int, code:String): Int = {
-    println("%.0f".format(i.toDouble * 100 / len) + "% done for label " + code + " " + watch.stopped)
+    println("%.0f".format(i.toDouble * 100 / len) + "% done, label = " + code + " " + watch.stopped)
     i + 1
   }
 
