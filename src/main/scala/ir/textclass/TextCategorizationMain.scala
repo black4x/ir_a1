@@ -97,6 +97,20 @@ object TextCategorizationMain {
     println("The F1 Score is: " + f1Score)
     myStopWatch.stop
     println("Scoring : " + myStopWatch.stopped)
+
+
+    // Write results
+    import java.io._
+    val file = new File("bayes.txt") //todo add correct file name depending on which classifier is run
+    val bw = new BufferedWriter(new FileWriter(file))
+    var result_per_doc = new String
+    result foreach {case (key, value) => {
+      result_per_doc = key + " " + value.mkString(" ") + "\n"
+      bw.write(result_per_doc)
+    }
+    }
+    bw.close()
+
     
 
     myStopWatch.stop
