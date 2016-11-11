@@ -49,7 +49,7 @@ object Go extends App {
   val trainDocsFiltered=trainStream.filter(_.codes("M13"))
   val allTrainy=trainDocsFiltered.map(doc => doc.name ->1).toMap
 
-  //val allValVectors = xmlValDocs.map(doc => doc.name -> createVectorFromDoc(doc)).toMap
+  val allValVectors = xmlValDocs.map(doc => doc.name -> createVectorFromDoc(doc)).toMap
 
   //SVM: Geht ca 175.72737288 sec.
   val svmClassifier= new SVM(allDocsVectors,trainStream,lambda,steps)
