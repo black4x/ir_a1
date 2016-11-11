@@ -99,14 +99,19 @@ object TextCategorizationMain {
     println("Scoring : " + myStopWatch.stopped)
 
 
-    // Todo: write into file
-    // Print results
+    // Write results
+    import java.io._
+    val file = new File("bayes.txt") //todo add correct file name depending on which classifier is run
+    val bw = new BufferedWriter(new FileWriter(file))
+    var result_per_doc = new String
     result foreach {case (key, value) => {
-      print (key + " ")
-      value.foreach(label => print(label + " "))
+      result_per_doc = key + " " + value.mkString(" ") + "\n"
+      bw.write(result_per_doc)
     }
-      println(" ") // seprate labels per document by space
     }
+    bw.close()
+
+    
 
     myStopWatch.stop
     println("Test done: " + myStopWatch.stopped)
