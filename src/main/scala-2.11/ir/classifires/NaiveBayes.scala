@@ -17,6 +17,7 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
   val watch = new StopWatch()
   // *** END
 
+
   // for each code calc conditional probability
   val condProbPerCode = codeSet.map(code => {
 
@@ -24,29 +25,30 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
 
     val (docsWithCode, docsWithoutCode) = stream.partition(_.codes(code))
 
-    //val (codePriorWithCode, probMapWithCode) = calculateConditionalProbability(docsWithCode)
+    val (codePriorWithCode, probMapWithCode) = calculateConditionalProbability(docsWithCode)
 
-    //val (codePriorWithoutCode, probMapWithoutCode) =
-    calculateConditionalProbability(docsWithoutCode)
+    val (codePriorWithoutCode, probMapWithoutCode) = calculateConditionalProbability(docsWithoutCode)
 
     watch.stop
 
     i = getProgress(i, codeSize)
 
-    //code._1 -> ((codePriorWithCode, probMapWithCo
-    // de), (codePriorWithoutCode, probMapWithoutCode))
+    code -> ((codePriorWithCode, probMapWithCode), (codePriorWithoutCode, probMapWithoutCode))
   })
 
   def calculateConditionalProbability(streamWithCode: Stream[XMLDocument]) = {
-    val codePrior = streamWithCode.length.toDouble / vocabSize
 
-    // mapping docsVectors with particular code
-    val docsVectorsWithCode = streamWithCode.map(doc => allDocsVectors.getOrElse(doc.name, Map[String, Int]())).toList
-    val normalization = IRUtils.totalCoordinateSum(docsVectorsWithCode) + vocabSize
+    val docsSet = streamWithCode.map(doc => doc.name).toSet
+    val codePrior = docsSet.size.toDouble / vocabSize
 
-    val probMap = vocab.map(token =>
-      token -> IRUtils.coordinateSumByToken(token, docsVectorsWithCode).toDouble / normalization).toMap
-    (codePrior, probMap)
+    val vocabWithCode = IRUtils.mergeVocab(allDocsVectors.filterKeys(docsSet))
+    println(vocabWithCode.size)
+
+    val normalization = vocabWithCode.values.par.sum + vocabSize
+
+    val condProbMap = vocab.map(token => token -> (vocabWithCode.getOrElse(token, 0) + 1) / normalization.toDouble)
+
+    (codePrior, condProbMap)
   }
 
   def predict(): Unit = {
