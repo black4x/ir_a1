@@ -1,7 +1,7 @@
 package ir.textclass.io
 
 import ch.ethz.dal.tinyir.io.ReutersRCVStream
-import ch.ethz.dal.tinyir.processing.{Tokenizer, XMLDocument}
+import ch.ethz.dal.tinyir.processing.{StopWords, Tokenizer, XMLDocument}
 import ch.ethz.dal.tinyir.util.StopWatch
 
 object TestRead extends App {
@@ -20,9 +20,9 @@ object TestRead extends App {
       a + (if (a.contains(kv._1)) kv._1 -> f(a(kv._1), kv._2) else kv)
     }
 
-  def createVocabFromDoc(doc: XMLDocument): Vocab = Tokenizer.tokenize(doc.content).groupBy(identity).mapValues(_.size)
+  def createVocabFromDoc(doc: XMLDocument): Vocab = StopWords.filter(Tokenizer.tokenize(doc.content)).groupBy(identity).mapValues(_.size)
 
-  val reuters = new ReutersRCVStream("/home/ajuodelis/eth/ir/data_real/train")
+  val reuters = new ReutersRCVStream("/home/ajuodelis/eth/ir/data_mini/train")
   println("# of files in zip = " + reuters.length)
 
   val watch = new StopWatch()
@@ -37,8 +37,8 @@ object TestRead extends App {
   println(watch.stopped)
 
   // real:
-  //  9216727
-  //  178069
+  //  9216727 ~ 10 Mill
+  //  178069 ~ 200 K
 
   // for mini
   //# all tokens = 1244
