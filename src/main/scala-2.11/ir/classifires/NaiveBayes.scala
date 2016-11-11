@@ -25,7 +25,7 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
   //val stest = Set("I33020", "GCRIM", "THAIL")
 
   // for each code calc conditional probability
-  var result = ListBuffer[(String, String)]()
+  var result = Map[String, ListBuffer[String]]()
 
   val condProbPerCode = codeSet.foreach(code => {
 
@@ -39,14 +39,19 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
 
     testStream.foreach(testDoc => {
       val probWithCode = calcCondProb(testDoc, condProbLogMapWithCode) + codePriorLogWithCode
-      val probWithoutCcode = calcCondProb(testDoc, condProbLogMapWithoutCode) + codePriorLogWithoutCode
-      if (probWithCode > probWithoutCcode) result += (testDoc.name -> code)
+      val probWithoutCode = calcCondProb(testDoc, condProbLogMapWithoutCode) + codePriorLogWithoutCode
+      if (probWithCode > probWithoutCode) {
+        if (result.contains(testDoc.name)) result.getOrElse(testDoc.name, ListBuffer[String]()) += code
+        else result += (testDoc.name -> ListBuffer[String](code))
+      }
     })
 
     watch.stop
     i = getProgress(i, codeSize, code)
 
   })
+
+  IRUtils.saveResultMap(result)
 
   def calculateConditionalProbability(oneClassStream: Stream[XMLDocument]): (Double, Map[String, Double]) = {
 

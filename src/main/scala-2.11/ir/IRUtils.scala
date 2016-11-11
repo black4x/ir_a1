@@ -6,6 +6,7 @@ import ch.ethz.dal.tinyir.processing.{StopWords, Tokenizer, XMLDocument}
 import com.github.aztek.porterstemmer.PorterStemmer
 import com.lambdaworks.jacks.JacksMapper
 
+import scala.collection.mutable.ListBuffer
 import scala.io.Source._
 
 object IRUtils {
@@ -81,6 +82,20 @@ object IRUtils {
       JacksMapper.writeValue(new PrintWriter(new File("codes")), codesSet)
       codesSet
     }
+  }
+
+  def saveResultMap(result: Map[String, ListBuffer[String]]) = {
+    // Write results
+    import java.io._
+    val file = new File("bayes.txt") //todo add correct file name depending on which classifier is run
+    val bw = new BufferedWriter(new FileWriter(file))
+    var result_per_doc = new String
+    result foreach { case (key, value) => {
+      result_per_doc = key + " " + value.mkString(" ") + "\n"
+      bw.write(result_per_doc)
+    }
+    }
+    bw.close()
   }
 
   /**
