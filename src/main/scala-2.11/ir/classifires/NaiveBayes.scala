@@ -13,8 +13,7 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
                  val allDocsVectors: Map[String, DocVector],
                  codeSet: Set[String],
                  trainStream: Stream[XMLDocument],
-                 testStream: Stream[XMLDocument]
-                ) {
+                 testStream: Stream[XMLDocument]) {
 
   // only for showing progress **** TODO remove later ?
   val codeSize = codeSet.size
@@ -34,13 +33,13 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
 
     val (docsWithCode, docsWithoutCode) = trainStream.partition(_.codes(code))
 
-    val (codePriorLogWithCode, condProgLogMapWithCode) = calculateConditionalProbability(docsWithCode)
-    val (codePriorLogWithoutCode, condProgLogMapWithoutCode) = calculateConditionalProbability(docsWithoutCode)
+    val (codePriorLogWithCode, condProbLogMapWithCode) = calculateConditionalProbability(docsWithCode)
+    val (codePriorLogWithoutCode, condProbLogMapWithoutCode) = calculateConditionalProbability(docsWithoutCode)
 
 
     testStream.foreach(testDoc => {
-      val probWithCode = calcCondProb(testDoc, condProgLogMapWithCode) * codePriorLogWithCode
-      val probWithoutCcode = calcCondProb(testDoc, condProgLogMapWithoutCode) * codePriorLogWithoutCode
+      val probWithCode = calcCondProb(testDoc, condProbLogMapWithCode) * codePriorLogWithCode
+      val probWithoutCcode = calcCondProb(testDoc, condProbLogMapWithoutCode) * codePriorLogWithoutCode
       if (probWithCode > probWithoutCcode) result += (testDoc.name -> code)
     })
 
