@@ -38,8 +38,8 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
 
 
     testStream.foreach(testDoc => {
-      val probWithCode = calcCondProb(testDoc, condProbLogMapWithCode) * codePriorLogWithCode
-      val probWithoutCcode = calcCondProb(testDoc, condProbLogMapWithoutCode) * codePriorLogWithoutCode
+      val probWithCode = calcCondProb(testDoc, condProbLogMapWithCode) + codePriorLogWithCode
+      val probWithoutCcode = calcCondProb(testDoc, condProbLogMapWithoutCode) + codePriorLogWithoutCode
       if (probWithCode > probWithoutCcode) result += (testDoc.name -> code)
     })
 
@@ -73,6 +73,6 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
   }
 
   private def calcCondProb(doc: XMLDocument, condProb: Map[String, Double]): Double =
-    doc.tokens.map(token => condProb.getOrElse(token, 1.0)).product
+    doc.tokens.map(token => condProb.getOrElse(token, 1.0)).sum
 
 }

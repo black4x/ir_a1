@@ -111,7 +111,7 @@ object TextCategorizationMain {
     }
     bw.close()
 
-    
+
 
     myStopWatch.stop
     println("Test done: " + myStopWatch.stopped)
