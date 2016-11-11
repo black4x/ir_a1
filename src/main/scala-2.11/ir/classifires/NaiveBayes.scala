@@ -73,6 +73,6 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
   }
 
   private def calcCondProb(doc: XMLDocument, condProb: Map[String, Double]): Double =
-    doc.tokens.map(token => condProb.getOrElse(token, 1.0)).sum
+    doc.tokens.map(token => condProb.getOrElse(token, 0.0)).sum
 
 }
