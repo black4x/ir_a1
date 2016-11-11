@@ -6,6 +6,7 @@ import ch.ethz.dal.tinyir.util.StopWatch
 import ir.IRUtils
 import ir.IRUtils.DocVector
 
+
 class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
                  val allDocsVectors: Map[String, DocVector],
                  codeSet: Set[String],
@@ -17,6 +18,10 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
   val watch = new StopWatch()
   // *** END
 
+//
+  //
+  //
+  //val stest = Set("I33020", "GCRIM", "THAIL")
 
   // for each code calc conditional probability
   val condProbPerCode = codeSet.map(code => {
@@ -31,7 +36,7 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
 
     watch.stop
 
-    i = getProgress(i, codeSize)
+    i = getProgress(i, codeSize, code)
 
     code -> ((codePriorWithCode, probMapWithCode), (codePriorWithoutCode, probMapWithoutCode))
   })
@@ -55,8 +60,8 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
 
   }
 
-  private def getProgress(index: Int, len: Int): Int = {
-    println("%.0f".format(i.toDouble * 100 / len) + "% done " + watch.stopped)
+  private def getProgress(index: Int, len: Int, code:String): Int = {
+    println("%.0f".format(i.toDouble * 100 / len) + "% done for label " + code + " " + watch.stopped)
     i + 1
   }
 

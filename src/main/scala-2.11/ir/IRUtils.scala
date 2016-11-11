@@ -30,7 +30,7 @@ object IRUtils {
     stream.map(doc => doc.name -> getDocVector(doc)).toMap
 
   def totalSumCoordinates(docsVector: Map[String, DocVector]): Int =
-    docsVector.values.map(docVector => docVector.values.reduce(_ + _)).reduce(_ + _)
+    docsVector.values.map(docVector => docVector.values.sum).sum
 
   def sumCoordinatesByToken(docsVector: Map[String, DocVector], token: String): Int =
     docsVector.values.map(docVector => docVector.getOrElse(token, 0)).reduce(_ + _)
@@ -44,12 +44,12 @@ object IRUtils {
   def getSetOfDistinctTokens(docsVectorsList: List[DocVector]): Set[String] =
     docsVectorsList.map(docVector => docVector.keySet).reduce(_ ++ _)
 
-  def mergeMap(ms: List[DocVector])(f: (Int, Int) => Int): DocVector =
-    (Map[String, Int]() /: (for (m <- ms; kv <- m) yield kv)) { (a, kv) =>
-      a + (if (a.contains(kv._1)) kv._1 -> f(a(kv._1), kv._2) else kv)
-    }
 
-  def mergeVocab(docsVectors: Map[String, DocVector]): DocVector = mergeMap(docsVectors.values.toList)((v1, v2) => v1 + v2)
+  def merge(docVector1: DocVector, docVector2: DocVector): DocVector =
+    docVector1 ++ docVector2.map { case (token, coord) => token -> (coord + docVector1.getOrElse(token, 0)) }
+
+  def mergeVocab(docsVectors: Map[String, DocVector]): DocVector =
+    docsVectors.values.toList.par.aggregate(Map[String, Int]())(merge, merge)
 
   def readAllDocsVectors(trainStream: Stream[XMLDocument]): Map[String, DocVector] = {
     // trying to read from cash file : [docName -> DocVector]
