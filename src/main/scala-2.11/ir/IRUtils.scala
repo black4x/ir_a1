@@ -55,7 +55,7 @@ object IRUtils {
     docsVectors.values.toList.par.aggregate(Map[String, Int]())(merge, merge)
 
   def readAllDocsVectors(trainStream: Stream[XMLDocument]): Map[String, DocVector] = {
-    // trying to read from cash file : [docName -> DocVector]
+    // trying to read from cache file : [docName -> DocVector]
     val file = new File("train")
     if (file.exists()) {
       val instance = JacksMapper.readValue[Map[String, DocVector]](new FileInputStream(file))

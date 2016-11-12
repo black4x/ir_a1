@@ -25,6 +25,7 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
   //val stest = Set("I33020", "GCRIM", "THAIL")
 
   // for each code calc conditional probability
+
   var result = Map[String, ListBuffer[String]]()
 
   val condProbPerCode = codeSet.foreach(code => {
