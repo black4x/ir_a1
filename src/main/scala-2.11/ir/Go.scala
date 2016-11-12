@@ -12,11 +12,16 @@ import scala.collection.mutable.ListBuffer
 
 object Go extends App {
 
+  // Set parameters
+  var runMode = "validation"
+  var classifierType = "nb"
+  var baseDir = "/home/ajuodelis/eth/ir/data_real"
 
-
-  val runMode = "validation" //todo read from args
-  val classifierType = "nb" // todo: read from args: nb, lsvm, lr
-  val baseDir = "/home/ajuodelis/eth/ir/data_real" // TODO read baseDir from args
+  if (!args.isEmpty) {
+    baseDir = args(0)
+    classifierType = args(1)
+    runMode = args(2)
+  }
 
   val codesPath = baseDir + "/codes"
   val trainPath = baseDir + "/train"
@@ -162,6 +167,6 @@ object Go extends App {
 
   }
 
-  
+
 
 }
