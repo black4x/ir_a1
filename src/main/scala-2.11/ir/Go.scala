@@ -90,7 +90,7 @@ object Go extends App {
       val svmClassifier = new SVM(allDocsVectorsTrain, allTrainy, lambda, steps)
 
       // Now predict the docs that match this current code
-      // allDocVectorsValidation is of type Map[String, Map[String, Int]] -> Doc Name + Map of distinct tokens + coutn
+      // allDocVectorsToPredict is of type Map[String, Map[String, Int]] -> Doc Name + Map of distinct tokens + coutn
       for (docVectorToPredict <- allDocVectorsToPredict) {
 
         val svm_result = svmClassifier.prediction(docVectorToPredict._2) //submit one Doc Vector = Distinct Token + Count of one doc
@@ -102,26 +102,28 @@ object Go extends App {
           else resultsSVM += (docVectorToPredict._1 -> ListBuffer[String](code))
         }
       }
+    } // end of code loop
 
-      // Call calcualte F1 Score in case Run Mode is "Validation"
-      if (runMode == "vali") {
-        val score = new Scoring(validationReuters, resultsSVM)
-        val f1ScoreSVM = score.calculateF1()
-        println("The F1 Score for the SVM Classifier is: " + f1ScoreSVM)
-      }
-
-      // Write results to file in case Run Mode is "Test"
-      if (runMode == "test") {
-        IRUtils.saveResultMap(resultsSVM, "ir-project-2016-1-28-lsvm.txt")
-      }
-
+    // Call calcualte F1 Score in case Run Mode is "Validation"
+    if (runMode == "vali") {
+      val score = new Scoring(validationReuters, resultsSVM)
+      val f1ScoreSVM = score.calculateF1()
+      println("The F1 Score for the SVM Classifier is: " + f1ScoreSVM)
     }
+
+    // Write results to file in case Run Mode is "Test"
+    if (runMode == "test") {
+      IRUtils.saveResultMap(resultsSVM, "ir-project-2016-1-28-lsvm.txt")
+    }
+
   }
 
 
-  // Start of Logistic Regeression (if specified)
-  if (classifierType == "lsvm") {
+  // Start of Logistic Regression (if specified)
+  if (classifierType == "lr") {
     var resultsLogReg = Map[String, ListBuffer[String]]()
+    val alphap = 1.0
+    val alpham = 1.0
 
     // Loop over all Codes, and for each code predict documents for that code. Then proceed to next code, etc.
     for ((code, text) <- codesMap) {
@@ -129,21 +131,37 @@ object Go extends App {
       val trainDocsFiltered = trainStream.filter(_.codes(code))
       val allTrainy = trainDocsFiltered.map(doc => doc.name -> 1).toMap
 
-      //val lRClassifier= new LogisticRegressionClassifier(allDocsVectorsTrain, allTrainy, 100)
+      val lRClassifier= new LogisticRegressionClassifier(allDocsVectorsTrain, allTrainy, alphap, alpham, 100)
 
+      // Now predict the docs that match this current code
+      // allDocVectorsToPredict is of type Map[String, Map[String, Int]] -> Doc Name + Map of distinct tokens + coutn
+      for (docVectorToPredict <- allDocVectorsToPredict) {
 
+        val lr_result = lRClassifier.prediction(docVectorToPredict._2) //submit one Doc Vector = Distinct Token + Count of one doc
+
+        // add code/label to result set if number is positive
+        // resultsLogReg will contain for each Doc name a list of codes found
+        if (lr_result > 0.0) {
+          if (resultsLogReg.contains(docVectorToPredict._1)) resultsLogReg.getOrElse(docVectorToPredict._1, ListBuffer[String]()) += code
+          else resultsLogReg += (docVectorToPredict._1 -> ListBuffer[String](code))
+        }
+      }
+    } // end of code loop
+
+    // Call calcualte F1 Score in case Run Mode is "Validation"
+    if (runMode == "vali") {
+      val score = new Scoring(validationReuters, resultsLogReg)
+      val f1ScoreLogReg = score.calculateF1()
+      println("The F1 Score for the SVM Classifier is: " + f1ScoreLogReg)
     }
+
+    // Write results to file in case Run Mode is "Test"
+    if (runMode == "test") {
+      IRUtils.saveResultMap(resultsLogReg, "ir-project-2016-1-28-lr.txt")
+    }
+
   }
 
-
-  //val lRClassifier= new LogisticRegressionClassifier1(allTrainVectors,allTrainy,100)
-  //Rewrite to take all classes
-  //Tester.testClassifier(lRClassifier,allValVectors,allValy)
-
-
-
-
-
-
+  
 
 }
