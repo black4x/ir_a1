@@ -63,17 +63,15 @@ object Go extends App {
   println("init complete " + watch.stopped)
   println("------------")
 
+  watch.start
 
   // Start of Naive Bayes (if specified)
   if (classifierType == "nb") {
-    watch.start
 
     // todo: run this for Validation or Test docs. Only for Test Docs you need to print a file with the results.
     // todo: For Validation docs, get the result via prediction method and then send it to the F1 Score method in IRUtils
     val naiveBayes = new NaiveBayes(vocabSize, vocab, allDocsVectorsTrain, codeSet, trainStream, validationStream)
 
-    watch.stop
-    println("done " + watch.stopped)
 
   }
 
@@ -167,6 +165,8 @@ object Go extends App {
 
   }
 
+  watch.stop
+  println("Classfier execution done " + watch.stopped)
 
 
 }
