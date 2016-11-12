@@ -52,7 +52,7 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
 
   })
 
-  IRUtils.saveResultMap(result)
+  IRUtils.saveResultMap(result,"ir-project-2016-1-28-nb.txt")
 
   def calculateConditionalProbability(oneClassStream: Stream[XMLDocument]): (Double, Map[String, Double]) = {
 

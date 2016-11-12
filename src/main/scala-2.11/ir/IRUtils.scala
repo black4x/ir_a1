@@ -86,10 +86,10 @@ object IRUtils {
     }
   }
 
-  def saveResultMap(result: Map[String, ListBuffer[String]]) = {
+  def saveResultMap(result: Map[String, ListBuffer[String]], filename: String) = {
     // Write results
     import java.io._
-    val file = new File("bayes.txt") //todo add correct file name depending on which classifier is run
+    val file = new File(filename) //todo add correct file name depending on which classifier is run
     val bw = new BufferedWriter(new FileWriter(file))
     var result_per_doc = new String
     result foreach { case (key, value) => {
