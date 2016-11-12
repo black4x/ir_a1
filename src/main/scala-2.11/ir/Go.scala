@@ -32,7 +32,7 @@ object Go extends App {
   watch.start
 
   val codesStream = new ZipDirStream(codesPath).stream
-  val codesMap = IRUtils.getCodeValueMap(codesStream)
+  //val codesMap = IRUtils.getCodeValueMap(codesStream)
   val trainStream = new ReutersRCVStream(trainPath).stream.take(50000)//!!! if change - have to delete cache
   val validationReuters = new ReutersRCVStream(validationPath)
   val validationStream = validationReuters.stream
@@ -87,7 +87,7 @@ object Go extends App {
     val steps = 10000
 
     // Loop over all Codes, and for each code predict documents for that code. Then proceed to next code, etc.
-    for ((code, text) <- codesMap) {
+    for (code <- codeSet) {
 
       val trainDocsFiltered = trainStream.filter(_.codes(code))
       val allTrainy = trainDocsFiltered.map(doc => doc.name -> 1).toMap
@@ -131,7 +131,7 @@ object Go extends App {
     val alpham = 1.0
 
     // Loop over all Codes, and for each code predict documents for that code. Then proceed to next code, etc.
-    for ((code, text) <- codesMap) {
+    for (code <- codeSet) {
 
       val trainDocsFiltered = trainStream.filter(_.codes(code))
       val allTrainy = trainDocsFiltered.map(doc => doc.name -> 1).toMap
