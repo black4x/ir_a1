@@ -157,7 +157,7 @@ object Go extends App {
     if (runMode == "vali") {
       val score = new Scoring(validationReuters, resultsLogReg)
       val f1ScoreLogReg = score.calculateF1()
-      println("The F1 Score for the SVM Classifier is: " + f1ScoreLogReg)
+      println("The F1 Score for the Logistic Regression Classifier is: " + f1ScoreLogReg)
     }
 
     // Write results to file in case Run Mode is "Test"
