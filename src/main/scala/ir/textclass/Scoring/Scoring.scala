@@ -2,12 +2,14 @@ package ir.textclass.Scoring
 
 import ch.ethz.dal.tinyir.io.ReutersRCVStream
 import ch.ethz.dal.tinyir.processing.XMLDocument
+
 import scala.collection.Map
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by Ralph on 06/11/16.
   */
-class Scoring(val reuters_validate:ReutersRCVStream, val result_classifier: Map[String, List[String]] ) {
+class Scoring(val reuters_validate:ReutersRCVStream, val result_classifier: Map[String, ListBuffer[String]] ) {
 
 
   def calculateF1(): Double = {
