@@ -13,7 +13,7 @@ import scala.collection.mutable.ListBuffer
 object Go extends App {
 
   // Set parameters
-  var runMode = "validation"
+  var runMode = "vali" // "test"
   var classifierType = "nb"
   var baseDir = "/home/ajuodelis/eth/ir/data_real"
 
@@ -57,7 +57,7 @@ object Go extends App {
 
   println("vocab size= " + vocabSize)
   println("all words size = " + IRUtils.totalSumCoordinates(allDocsVectorsTrain))
-  println("test files zise = " + validationStream.length)
+  println("test files size = " + validationStream.length)
 
   watch.stop
   println("init complete " + watch.stopped)
