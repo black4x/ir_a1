@@ -9,12 +9,12 @@ import ir.textclass.Scoring.Scoring
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-
+//obsolete
 object TextCategorizationMain {
 
   def main(args: Array[String]): Unit = {
 
-
+/*
     // TODO read samples path from agrs
     //    if (args.isEmpty) {
     //      val path_train: String = "/Users/Ralph/Development/ETH/Information Retrieval/Project 1/zipTrain"
@@ -120,3 +120,4 @@ object TextCategorizationMain {
   }
 
 }
+*/
