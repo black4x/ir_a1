@@ -30,7 +30,7 @@ class Scoring(val reuters_validate:ReutersRCVStream, val result_classifier: Map[
   private def calculateF1PerDoc(vali_doc: XMLDocument): Double = {
 
     val labels_correct = vali_doc.codes
-    println("codes of validation doc " + labels_correct + " " + labels_correct.size)
+    //println("codes of validation doc " + labels_correct + " " + labels_correct.size)
 
     // Just in case we check if there is a result for validation document
     if(result_classifier.exists(_._1 == vali_doc.name) == false){
@@ -51,13 +51,13 @@ class Scoring(val reuters_validate:ReutersRCVStream, val result_classifier: Map[
       }
     })
 
-    println("correct prediction: " + nr_labels_classified_correct)
-    println("total labels in doc: " + labels_correct.size)
+    //println("correct prediction: " + nr_labels_classified_correct)
+    //println("total labels in doc: " + labels_correct.size)
 
     val precision = nr_labels_classified_correct / nr_labels_predicted
     val recall = nr_labels_classified_correct / labels_correct.size
 
-    println("per and recall " + precision + " " + recall)
+    //println("per and recall " + precision + " " + recall)
     if(precision + recall == 0){ return 0.0 }
     else {
       return (2 * precision * recall) / (precision + recall)
