@@ -54,37 +54,37 @@ object IRUtils {
   def mergeVocab(docsVectors: Map[String, DocVector]): DocVector =
     docsVectors.values.toList.par.aggregate(Map[String, Int]())(merge, merge)
 
-  def readAllDocsVectors(trainStream: Stream[XMLDocument]): Map[String, DocVector] = {
-    // trying to read from cache file : [docName -> DocVector]
-    val file = new File("train")
-    if (file.exists()) {
-      val instance = JacksMapper.readValue[Map[String, DocVector]](new FileInputStream(file))
-      println("train size = " + instance.size)
-      instance
-    } else {
-      // if not exists then creating map: [docName -> DocVector]
-      val allDocsVectors = getAllDocsVectors(trainStream)
-      // saving to file
-      JacksMapper.writeValue(new PrintWriter(new File("train")), allDocsVectors)
-      allDocsVectors
-    }
-  }
+//  def readAllDocsVectors(trainStream: Stream[XMLDocument]): Map[String, DocVector] = {
+//    // trying to read from cache file : [docName -> DocVector]
+//    val file = new File("train")
+//    if (file.exists()) {
+//      val instance = JacksMapper.readValue[Map[String, DocVector]](new FileInputStream(file))
+//      println("train size = " + instance.size)
+//      instance
+//    } else {
+//      // if not exists then creating map: [docName -> DocVector]
+//      val allDocsVectors = getAllDocsVectors(trainStream)
+//      // saving to file
+//      JacksMapper.writeValue(new PrintWriter(new File("train")), allDocsVectors)
+//      allDocsVectors
+//    }
+//  }
 
-  def readAllRealCodes(trainStream: Stream[XMLDocument]): Set[String] = {
-    // trying to read from cash file
-    val file = new File("codes")
-    if (file.exists()) {
-      val instance = JacksMapper.readValue[Set[String]](new FileInputStream(file))
-      println("codes size = " + instance.size)
-      instance
-    } else {
-      // if not exists then creating set
-      val codesSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)
-      // saving to file
-      JacksMapper.writeValue(new PrintWriter(new File("codes")), codesSet)
-      codesSet
-    }
-  }
+//  def readAllRealCodes(trainStream: Stream[XMLDocument]): Set[String] = {
+//    // trying to read from cash file
+//    val file = new File("codes")
+//    if (file.exists()) {
+//      val instance = JacksMapper.readValue[Set[String]](new FileInputStream(file))
+//      println("codes size = " + instance.size)
+//      instance
+//    } else {
+//      // if not exists then creating set
+//      val codesSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)
+//      // saving to file
+//      JacksMapper.writeValue(new PrintWriter(new File("codes")), codesSet)
+//      codesSet
+//    }
+//  }
 
   def saveResultMap(result: Map[String, ListBuffer[String]], filename: String) = {
     // Write results

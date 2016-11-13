@@ -9,7 +9,7 @@ import scala.collection.mutable.ListBuffer
 /**
   * Created by Ralph on 06/11/16.
   */
-class Scoring(val reuters_validate:ReutersRCVStream, val result_classifier: Map[String, ListBuffer[String]] ) {
+class Scoring(val reuters_validate:Stream[XMLDocument], val result_classifier: Map[String, ListBuffer[String]] ) {
 
 
   def calculateF1(): Double = {
@@ -21,8 +21,8 @@ class Scoring(val reuters_validate:ReutersRCVStream, val result_classifier: Map[
     //Precision per Document = "Number of labels predicted that are correct" divided by "Total number of labels predicted"
     //Recall per Document = "Number of labels found that are correct" divided by "Total Number of labels in the validation doc"
 
-    val nr_of_docs = reuters_validate.stream.size.toDouble
-    val F1_total = reuters_validate.stream.map(doc => calculateF1PerDoc(doc)).reduce(_ + _)  / nr_of_docs
+    val nr_of_docs = reuters_validate.size.toDouble
+    val F1_total = reuters_validate.map(doc => calculateF1PerDoc(doc)).sum  / nr_of_docs
     return F1_total
 
   }
@@ -33,7 +33,7 @@ class Scoring(val reuters_validate:ReutersRCVStream, val result_classifier: Map[
     //println("codes of validation doc " + labels_correct + " " + labels_correct.size)
 
     // Just in case we check if there is a result for validation document
-    if(result_classifier.exists(_._1 == vali_doc.name) == false){
+    if(!result_classifier.exists(_._1 == vali_doc.name)){
       println("No result found for Doc: " + vali_doc.name)
       return 0.0
     }
@@ -46,7 +46,7 @@ class Scoring(val reuters_validate:ReutersRCVStream, val result_classifier: Map[
     // Count how many predicted labels are actually in the validation document
     var nr_labels_classified_correct = 0.0
     labels_predicted.foreach(label_predicted => {
-      if (labels_correct.exists(label => label == label_predicted)) {
+      if (labels_correct.contains(label_predicted)) {
         nr_labels_classified_correct += 1
       }
     })
