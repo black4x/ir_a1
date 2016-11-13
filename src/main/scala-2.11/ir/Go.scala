@@ -29,7 +29,7 @@ object Go extends App {
 
   val predictPath =
     if (runMode == "vali") baseDir + "/validation"
-    else baseDir + "/validation"
+    else baseDir + "/test"
 
   val watch = new StopWatch()
   watch.start
