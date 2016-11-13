@@ -14,7 +14,7 @@ object Go extends App {
 
   // Set parameters
   var runMode = "vali" // "test"
-  var classifierType = "nb"//lsvm
+  var classifierType = "lsvm"//lsvm, nb, lr
   var baseDir = "/home/ajuodelis/eth/ir/data_real"
 
   if (!args.isEmpty) {
