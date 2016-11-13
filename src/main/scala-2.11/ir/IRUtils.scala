@@ -109,8 +109,8 @@ object IRUtils {
     }).toMap
 
   def printScore(validationStream: ReutersRCVStream): Unit = {
-    val score = new Scoring(validationStream, IRUtils.readResultFile(new File("bayes.txt")))
-    println(score.calculateF1())
+    //val score = new Scoring(validationStream, IRUtils.readResultFile(new File("bayes.txt")))
+    //println(score.calculateF1())
   }
 
   /**

@@ -14,7 +14,7 @@ object Go extends App {
 
   // Set parameters
   var runMode = "vali" // "test"
-  var classifierType = "nb"
+  var classifierType = "nb"//lsvm
   var baseDir = "/home/ajuodelis/eth/ir/data_real"
 
   if (!args.isEmpty) {
@@ -80,6 +80,7 @@ object Go extends App {
   // Start of linear SVM (if specified)
   if (classifierType == "lsvm") {
 
+    println("svm ...")
     var resultsSVM = Map[String, ListBuffer[String]]()
     val lambda = 0.01
     val steps = 10000

@@ -116,8 +116,7 @@ object TextCategorizationMain {
     myStopWatch.stop
     println("Test done: " + myStopWatch.stopped)
 
-
+*/
   }
 
 }
-*/
