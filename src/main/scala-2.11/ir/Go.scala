@@ -14,7 +14,7 @@ object Go extends App {
   // vali, test
   var runMode = "vali"
   //lsvm, nb, lr
-  var classifierType = "lsvm"
+  var classifierType = "lr"
 
   var baseDir = "/home/ajuodelis/eth/ir/data_real"
 
@@ -102,6 +102,7 @@ object Go extends App {
 
     val alphap = 1.0
     val alpham = 1.0
+    val steps = 10000
 
     // Loop over all Codes, and for each code predict documents for that code. Then proceed to next code, etc.
     for (code <- codeSet) {
@@ -109,7 +110,7 @@ object Go extends App {
       val trainDocsFiltered = trainStream.filter(_.codes(code))
       val allTrainy = trainDocsFiltered.map(doc => doc.name -> 1).toMap
 
-      val lRClassifier = new LogisticRegressionClassifier(allDocsVectorsTrain, allTrainy, alphap, alpham, 100)
+      val lRClassifier = new LogisticRegressionClassifier(allDocsVectorsTrain, allTrainy, alphap, alpham, steps)
 
       // Now predict the docs that match this current code
       // allDocVectorsToPredict is of type Map[String, Map[String, Int]] -> Doc Name + Map of distinct tokens + coutn
