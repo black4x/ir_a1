@@ -12,7 +12,7 @@ object Go extends App {
   // Set default parameters
 
   // vali, test
-  var runMode = "vali"
+  var runMode = "test"
   //lsvm, nb, lr
   var classifierType = "lr"
 
@@ -125,7 +125,7 @@ object Go extends App {
   if (runMode == "vali") {
     val score = new Scoring(predictStream, resultsMap)
     val f1ScoreSVM = score.calculateF1()
-    println("The F1 Score for the SVM Classifier is: " + f1ScoreSVM)
+    println("The F1 Score for the " + classifierType + " Classifier is: " + f1ScoreSVM)
   }
 
   // Write results to file in case Run Mode is "Test"
