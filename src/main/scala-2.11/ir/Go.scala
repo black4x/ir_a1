@@ -5,6 +5,7 @@ import ch.ethz.dal.tinyir.util.StopWatch
 import ir.utils.{IRUtils, Scoring}
 import ir.classifires.{LogisticRegression, NaiveBayes, SVM}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 object Go extends App {
@@ -41,10 +42,11 @@ object Go extends App {
 
   println("initializing ... ")
   //reading all codes from training set
-  val codeSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)
+  val codeSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)//IRUtils.readAllRealCodes(trainStream)
   // making map: Doc_Name -> Doc_Vector, by Doc_Vector means: Distinct_Token -> Frequency_Number
   val allDocsVectorsTrain = IRUtils.getAllDocsVectors(trainStream)
-  val allDocVectorsToPredict = IRUtils.getAllDocsVectors(predictStream)
+  //val allDocsVectorsTrain = IRUtils.readAllDocsVectors(trainStream)
+
   // merging all vocab to one set, in order to get distinct tokens
   val vocab = IRUtils.getSetOfDistinctTokens(allDocsVectorsTrain)
   val vocabSize = vocab.size
@@ -59,17 +61,18 @@ object Go extends App {
 
   watch.start
   // Start of Naive Bayes
-  var resultsMap = Map[String, ListBuffer[String]]()
+  var resultsMap = mutable.Map[String, ListBuffer[String]]()
 
   if (classifierType == BAYES) {
     println("very naïve Bayes ...")
 
-    val naiveBayes = new NaiveBayes(vocabSize, vocab, allDocsVectorsTrain, codeSet, trainStream)
-    resultsMap = naiveBayes.predict(predictStream)
+    NaiveBayes.predict(vocabSize, vocab, allDocsVectorsTrain, codeSet, trainStream, predictStream)
+    NaiveBayes.collectResults(resultsMap)
   }
 
   // Start of linear SVM (if specified)
   if (classifierType == SVM) {
+    val allDocVectorsToPredict = IRUtils.getAllDocsVectors(predictStream)
     println("support vector machine  ...")
 
     val lambda = 0.01
@@ -88,7 +91,7 @@ object Go extends App {
       for (docVectorToPredict <- allDocVectorsToPredict) {
 
         val svm_result = svmClassifier.prediction(docVectorToPredict._2) //submit one Doc Vector = Distinct Token + Count of one doc
-        if (svm_result > 0.0) addCodeToResultMap(docVectorToPredict._1, code)
+        if (svm_result > 0.0) IRUtils.addCodeToResultMap(resultsMap, docVectorToPredict._1, code)
       }
     } // end of code loop
   }
@@ -96,6 +99,7 @@ object Go extends App {
 
   // Start of Logistic Regression (if specified)
   if (classifierType == LINEAR_REGRESSION) {
+    val allDocVectorsToPredict = IRUtils.getAllDocsVectors(predictStream)
     println("logistic regression ...")
 
     val alphap = 1.0
@@ -114,7 +118,7 @@ object Go extends App {
       // allDocVectorsToPredict is of type Map[String, Map[String, Int]] -> Doc Name + Map of distinct tokens + coutn
       for (docVectorToPredict <- allDocVectorsToPredict) {
         val lr_result = lRClassifier.prediction(docVectorToPredict._2) //submit one Doc Vector = Distinct Token + Count of one doc
-        if (lr_result > 0.0) addCodeToResultMap(docVectorToPredict._1, code)
+        if (lr_result > 0.0) IRUtils.addCodeToResultMap(resultsMap, docVectorToPredict._1, code)
       }
     } // end of code loop
   }
@@ -133,10 +137,4 @@ object Go extends App {
   watch.stop
   println("Classifier execution done " + watch.stopped)
 
-  // add code/label to result set if number is positive
-  // resultsLogReg will contain for each Doc name a list of codes found
-  def addCodeToResultMap(docName: String, newCode: String): Unit = {
-    if (resultsMap.contains(docName)) resultsMap.getOrElse(docName, ListBuffer[String]()) += newCode
-    else resultsMap += (docName -> ListBuffer[String](newCode))
-  }
 }

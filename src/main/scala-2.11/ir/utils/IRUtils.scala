@@ -1,9 +1,10 @@
 package ir.utils
 
-import java.io.{File, InputStream}
+import java.io.{File, FileInputStream, InputStream, PrintWriter}
 
 import ch.ethz.dal.tinyir.processing.{StopWords, Tokenizer, XMLDocument}
 import com.github.aztek.porterstemmer.PorterStemmer
+import com.lambdaworks.jacks.JacksMapper
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source._
@@ -49,7 +50,7 @@ object IRUtils {
   def merge(docVector1: DocVector, docVector2: DocVector): DocVector =
     docVector1 ++ docVector2.map { case (token, coord) => token -> (coord + docVector1.getOrElse(token, 0)) }
 
-  def saveResultMap(result: Map[String, ListBuffer[String]], filename: String) = {
+  def saveResultMap(result: scala.collection.mutable.Map[String, ListBuffer[String]], filename: String) = {
     // Write results
     import java.io._
     val file = new File(filename)
@@ -63,6 +64,38 @@ object IRUtils {
     bw.close()
   }
 
+  def readAllDocsVectors(trainStream: Stream[XMLDocument]): Map[String, DocVector] = {
+    // trying to read from cash file : [docName -> DocVector]
+    val file = new File("train")
+    if (file.exists()) {
+      val instance = JacksMapper.readValue[Map[String, DocVector]](new FileInputStream(file))
+      println("train size = " + instance.size)
+      instance
+    } else {
+      // if not exists then creating map: [docName -> DocVector]
+      val allDocsVectors = getAllDocsVectors(trainStream)
+      // saving to file
+      JacksMapper.writeValue(new PrintWriter(new File("train")), allDocsVectors)
+      allDocsVectors
+    }
+  }
+
+  def readAllRealCodes(trainStream: Stream[XMLDocument]): Set[String] = {
+    // trying to read from cash file
+    val file = new File("codes")
+    if (file.exists()) {
+      val instance = JacksMapper.readValue[Set[String]](new FileInputStream(file))
+      println("codes size = " + instance.size)
+      instance
+    } else {
+      // if not exists then creating set
+      val codesSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)
+      // saving to file
+      JacksMapper.writeValue(new PrintWriter(new File("codes")), codesSet)
+      codesSet
+    }
+  }
+
   def readResultFile(file: File): Map[String, List[String]] =
     scala.io.Source.fromFile(file).getLines().map(line => {
       val tokents = line.split(" ")
@@ -70,6 +103,18 @@ object IRUtils {
       val codes = tokents.tail.toList
       (name, codes)
     }).toMap
+
+  /**
+    * add code/label to result set if number is positive
+    *
+    * @param resultsMap
+    * @param docName
+    * @param newCode
+    */
+  def addCodeToResultMap(resultsMap: scala.collection.mutable.Map[String, ListBuffer[String]], docName: String, newCode: String): Unit = {
+    if (resultsMap.contains(docName)) resultsMap.getOrElse(docName, ListBuffer[String]()) += newCode
+    else resultsMap += (docName -> ListBuffer[String](newCode))
+  }
 
   /**
     * Creates Map with Code Definitions from zip files from given stream

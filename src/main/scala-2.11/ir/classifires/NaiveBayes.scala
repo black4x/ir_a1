@@ -1,41 +1,75 @@
 package ir.classifires
 
 
+import java.io.{File, PrintWriter}
+
 import ch.ethz.dal.tinyir.processing.XMLDocument
 import ch.ethz.dal.tinyir.util.StopWatch
 import ir.utils.IRUtils
 import ir.utils.IRUtils.DocVector
 
 import scala.collection.mutable.ListBuffer
+import scala.io.Source
 
 
-class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
-                 val allDocsVectors: Map[String, DocVector],
-                 codeSet: Set[String],
-                 trainStream: Stream[XMLDocument]) {
+object NaiveBayes {
 
-  // only for showing progress **** TODO remove later ?
-  val codeSize = codeSet.size
-  var i = 0
-  val watch = new StopWatch()
-  // *** END
+  def predict(vocabSize: Int, vocab: Set[String],
+              allDocsVectors: Map[String, DocVector],
+              codeSet: Set[String],
+              trainStream: Stream[XMLDocument],
+              testStream: Stream[XMLDocument]) {
 
-  // for each code calc conditional probability
-  val condProbPerCode = codeSet.map(code => {
+    // only for showing progress **** TODO remove later ?
+    val codeSize = codeSet.size
+    var i = 0
+    val watch = new StopWatch()
+    // *** END
 
-    watch.start
+    val out = new PrintWriter(new File("nb-temp.txt"))
 
-    val (docsWithCode, docsWithoutCode) = trainStream.partition(_.codes(code))
+    // for each code calc conditional probability
+    codeSet.foreach(code => {
 
-    val res = code -> (calculateConditionalProbability(docsWithCode), calculateConditionalProbability(docsWithoutCode))
+      watch.start
 
-    watch.stop
-    i = getProgress(i, codeSize, code)
+      val (docsCodePos, docsCodeNeg) = trainStream.partition(_.codes(code))
 
-    res
-  }).toMap
+      val (posPrior, posCondProbMap) = calculateConditionalProbability(vocabSize, vocab, allDocsVectors, docsCodePos)
+      val (negPrior, negCondProbMap) = calculateConditionalProbability(vocabSize, vocab, allDocsVectors, docsCodeNeg)
 
-  def calculateConditionalProbability(oneClassStream: Stream[XMLDocument]): (Double, Map[String, Double]) = {
+      out.write(code + "\t")
+      testStream.foreach(testDoc => {
+        val probWithCode = calcCondProb(testDoc, posCondProbMap) + posPrior
+        val probWithoutCode = calcCondProb(testDoc, negCondProbMap) + negPrior
+        if (probWithCode > probWithoutCode) {
+          out.write(testDoc.name + "\t")
+        }
+      })
+      out.write("\n")
+
+      watch.stop
+      println("%.0f".format(i.toDouble * 100 / codeSize) + "% done, label = " + code + " " + watch.stopped)
+      i = i + 1
+    })
+
+    out.close()
+  }
+
+  def collectResults(resultsMap: scala.collection.mutable.Map[String, ListBuffer[String]]): Unit = {
+    Source.fromFile("nb-temp.txt").getLines().foreach(line => {
+      val all = line.split("\t")
+      val code = all.head
+      all.tail.foreach(docName => {
+        IRUtils.addCodeToResultMap(resultsMap, docName, code)
+      })
+    })
+    resultsMap
+  }
+
+  private def calculateConditionalProbability(vocabSize: Int, vocab: Set[String],
+                                              allDocsVectors: Map[String, DocVector],
+                                              oneClassStream: Stream[XMLDocument]): (Double, Map[String, Double]) = {
 
     val docsSet = oneClassStream.map(doc => doc.name).toSet
     val codePriorLog = scala.math.log(docsSet.size.toDouble / vocabSize)
@@ -50,35 +84,6 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
     (codePriorLog, condProbLogMap)
   }
 
-  def predict(testStream: Stream[XMLDocument]) = {
-
-    var result = Map[String, ListBuffer[String]]()
-
-    codeSet.foreach(code => {
-
-      val condProbTuple = condProbPerCode.get(code)
-      condProbTuple match {
-        case Some(_) => {
-          val (withCode, withoutCode) = condProbTuple.get
-          testStream.foreach(testDoc => {
-            val probWithCode = calcCondProb(testDoc, withCode._2) + withCode._1
-            val probWithoutCode = calcCondProb(testDoc, withoutCode._2) + withoutCode._1
-            if (probWithCode > probWithoutCode) {
-              if (result.contains(testDoc.name)) result.getOrElse(testDoc.name, ListBuffer[String]()) += code
-              else result += (testDoc.name -> ListBuffer[String](code))
-            }
-          })
-        }
-      }
-    })
-    result
-  }
-
-
-  private def getProgress(index: Int, len: Int, code: String): Int = {
-    println("%.0f".format(i.toDouble * 100 / len) + "% done, label = " + code + " " + watch.stopped)
-    i + 1
-  }
 
   private def calcCondProb(doc: XMLDocument, condProb: Map[String, Double]): Double =
     doc.tokens.map(token => condProb.getOrElse(token, 0.0)).sum
