@@ -3,6 +3,7 @@ package ir.utils
 import java.io.{File, FileInputStream, InputStream, PrintWriter}
 
 import ch.ethz.dal.tinyir.processing.{StopWords, Tokenizer, XMLDocument}
+import ch.ethz.dal.tinyir.util.StopWatch
 import com.github.aztek.porterstemmer.PorterStemmer
 import com.lambdaworks.jacks.JacksMapper
 
@@ -64,37 +65,38 @@ object IRUtils {
     bw.close()
   }
 
-  def readAllDocsVectors(trainStream: Stream[XMLDocument]): Map[String, DocVector] = {
-    // trying to read from cash file : [docName -> DocVector]
-    val file = new File("train")
-    if (file.exists()) {
-      val instance = JacksMapper.readValue[Map[String, DocVector]](new FileInputStream(file))
-      println("train size = " + instance.size)
-      instance
-    } else {
-      // if not exists then creating map: [docName -> DocVector]
+  /**
+    * creating hash if needed
+    * @param fileName
+    * @param trainStream
+    * @return
+    */
+
+  def initHash(fileName: String, trainStream: Stream[XMLDocument]): Boolean = {
+    val file = new File(fileName)
+    if (!file.exists()) {
+      val watch = new StopWatch()
+      watch.start
+      println("initializing hash... ")
       val allDocsVectors = getAllDocsVectors(trainStream)
       // saving to file
-      JacksMapper.writeValue(new PrintWriter(new File("train")), allDocsVectors)
-      allDocsVectors
+      JacksMapper.writeValue(new PrintWriter(file), allDocsVectors)
+      watch.stop
+      println("done " + watch.stopped)
+      return true
     }
+    false
   }
 
-  def readAllRealCodes(trainStream: Stream[XMLDocument]): Set[String] = {
-    // trying to read from cash file
-    val file = new File("codes")
-    if (file.exists()) {
-      val instance = JacksMapper.readValue[Set[String]](new FileInputStream(file))
-      println("codes size = " + instance.size)
-      instance
-    } else {
-      // if not exists then creating set
-      val codesSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)
-      // saving to file
-      JacksMapper.writeValue(new PrintWriter(new File("codes")), codesSet)
-      codesSet
-    }
-  }
+  /**
+    *init from cash file : [docName -> DocVector]
+    * @param fileName from hash file
+    * @param trainStream stream with training data set
+    * @return
+    */
+  def readAllDocsVectorsFromHash(fileName: String, trainStream: Stream[XMLDocument]): Map[String, DocVector] =
+    JacksMapper.readValue[Map[String, DocVector]](new FileInputStream(new File(fileName)))
+
 
   def readResultFile(file: File): Map[String, List[String]] =
     scala.io.Source.fromFile(file).getLines().map(line => {

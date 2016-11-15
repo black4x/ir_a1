@@ -64,7 +64,6 @@ object NaiveBayes {
         IRUtils.addCodeToResultMap(resultsMap, docName, code)
       })
     })
-    resultsMap
   }
 
   private def calculateConditionalProbability(vocabSize: Int, vocab: Set[String],

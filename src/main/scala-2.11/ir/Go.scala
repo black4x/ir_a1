@@ -2,8 +2,8 @@ package ir
 
 import ch.ethz.dal.tinyir.io.{ReutersRCVStream, ZipDirStream}
 import ch.ethz.dal.tinyir.util.StopWatch
-import ir.utils.{IRUtils, Scoring}
 import ir.classifires.{LogisticRegression, NaiveBayes, SVM}
+import ir.utils.{IRUtils, Scoring}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -34,18 +34,26 @@ object Go extends App {
     classifierType = args(1)
     runMode = args(2)
   }
+
   val watch = new StopWatch()
   val codesStream = new ZipDirStream(codesPath).stream
   val trainStream = new ReutersRCVStream(trainPath).stream
   val predictStream = new ReutersRCVStream(predictPath).stream
+
+  val HASH_FILE = "train_hash"
+
+  if (IRUtils.initHash(HASH_FILE, trainStream)) {
+    println("hash initialized, please run again (it is needed only one time)")
+    sys.exit()
+  }
+
   watch.start
 
-  println("initializing ... ")
+  println("initializing using hash... ")
   //reading all codes from training set
-  val codeSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)//IRUtils.readAllRealCodes(trainStream)
+  val codeSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)
   // making map: Doc_Name -> Doc_Vector, by Doc_Vector means: Distinct_Token -> Frequency_Number
-  val allDocsVectorsTrain = IRUtils.getAllDocsVectors(trainStream)
-  //val allDocsVectorsTrain = IRUtils.readAllDocsVectors(trainStream)
+  val allDocsVectorsTrain = IRUtils.readAllDocsVectorsFromHash(HASH_FILE, trainStream)
 
   // merging all vocab to one set, in order to get distinct tokens
   val vocab = IRUtils.getSetOfDistinctTokens(allDocsVectorsTrain)
