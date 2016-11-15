@@ -1,12 +1,9 @@
-package ir
+package ir.utils
 
-import java.io.{File, FileInputStream, InputStream, PrintWriter}
+import java.io.{File, InputStream}
 
-import ch.ethz.dal.tinyir.io.ReutersRCVStream
 import ch.ethz.dal.tinyir.processing.{StopWords, Tokenizer, XMLDocument}
 import com.github.aztek.porterstemmer.PorterStemmer
-import com.lambdaworks.jacks.JacksMapper
-import ir.textclass.Scoring.Scoring
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source._
@@ -25,12 +22,14 @@ object IRUtils {
     case None => 1
   }
 
-  def getDocVector(doc: XMLDocument): DocVector = StopWords.filterOutSW(Tokenizer.tokenize(doc.content))
-    .map(token => PorterStemmer.stem(token)) // saves almost nothing, but takes a lot of time => useless?
-    .groupBy(identity).mapValues(_.size)
-
   def getAllDocsVectors(stream: Stream[XMLDocument]): Map[String, DocVector] =
     stream.map(doc => doc.name -> getDocVector(doc)).toMap
+
+  def getDocVector(doc: XMLDocument): DocVector =
+    StopWords.filterOutSW(Tokenizer.tokenize(doc.content)) // filtering stop words out
+      .map(token => PorterStemmer.stem(token)) // making all form of words the same
+      .groupBy(identity) // grouping by distinct tokens
+      .mapValues(_.size) // counting size
 
   def totalSumCoordinates(docsVector: Map[String, DocVector]): Int =
     docsVector.values.map(docVector => docVector.values.sum).sum
@@ -38,58 +37,22 @@ object IRUtils {
   def sumCoordinatesByToken(docsVector: Map[String, DocVector], token: String): Int =
     docsVector.values.map(docVector => docVector.getOrElse(token, 0)).reduce(_ + _)
 
-  //  def sumByToken(token: String, docsVector: Map[String, DocVector]): Double =
-  //    docsVector.foldLeft(0.0)((currentSum, item) => sumWithLaplase(currentSum, item._2.get(token)))
-
   def getSetOfDistinctTokens(docsVectors: Map[String, DocVector]): Set[String] =
     docsVectors.values.map(docVector => docVector.keySet).reduce(_ ++ _)
 
   def getSetOfDistinctTokens(docsVectorsList: List[DocVector]): Set[String] =
     docsVectorsList.map(docVector => docVector.keySet).reduce(_ ++ _)
 
+  def mergeVocab(docsVectors: Map[String, DocVector]): DocVector =
+    docsVectors.values.toList.par.aggregate(Map[String, Int]())(merge, merge)
 
   def merge(docVector1: DocVector, docVector2: DocVector): DocVector =
     docVector1 ++ docVector2.map { case (token, coord) => token -> (coord + docVector1.getOrElse(token, 0)) }
 
-  def mergeVocab(docsVectors: Map[String, DocVector]): DocVector =
-    docsVectors.values.toList.par.aggregate(Map[String, Int]())(merge, merge)
-
-//  def readAllDocsVectors(trainStream: Stream[XMLDocument]): Map[String, DocVector] = {
-//    // trying to read from cache file : [docName -> DocVector]
-//    val file = new File("train")
-//    if (file.exists()) {
-//      val instance = JacksMapper.readValue[Map[String, DocVector]](new FileInputStream(file))
-//      println("train size = " + instance.size)
-//      instance
-//    } else {
-//      // if not exists then creating map: [docName -> DocVector]
-//      val allDocsVectors = getAllDocsVectors(trainStream)
-//      // saving to file
-//      JacksMapper.writeValue(new PrintWriter(new File("train")), allDocsVectors)
-//      allDocsVectors
-//    }
-//  }
-
-//  def readAllRealCodes(trainStream: Stream[XMLDocument]): Set[String] = {
-//    // trying to read from cash file
-//    val file = new File("codes")
-//    if (file.exists()) {
-//      val instance = JacksMapper.readValue[Set[String]](new FileInputStream(file))
-//      println("codes size = " + instance.size)
-//      instance
-//    } else {
-//      // if not exists then creating set
-//      val codesSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)
-//      // saving to file
-//      JacksMapper.writeValue(new PrintWriter(new File("codes")), codesSet)
-//      codesSet
-//    }
-//  }
-
   def saveResultMap(result: Map[String, ListBuffer[String]], filename: String) = {
     // Write results
     import java.io._
-    val file = new File(filename) //todo add correct file name depending on which classifier is run
+    val file = new File(filename)
     val bw = new BufferedWriter(new FileWriter(file))
     var result_per_doc = new String
     result foreach { case (key, value) => {
@@ -107,11 +70,6 @@ object IRUtils {
       val codes = tokents.tail.toList
       (name, codes)
     }).toMap
-
-  def printScore(validationStream: ReutersRCVStream): Unit = {
-    //val score = new Scoring(validationStream, IRUtils.readResultFile(new File("bayes.txt")))
-    //println(score.calculateF1())
-  }
 
   /**
     * Creates Map with Code Definitions from zip files from given stream

@@ -1,4 +1,4 @@
-package ir
+package ir.classifires
 
 import scala.collection.Map
 

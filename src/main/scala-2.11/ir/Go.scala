@@ -2,48 +2,49 @@ package ir
 
 import ch.ethz.dal.tinyir.io.{ReutersRCVStream, ZipDirStream}
 import ch.ethz.dal.tinyir.util.StopWatch
-import ir.classifires.{LogisticRegressionClassifier, NaiveBayes, SVM}
-import ir.textclass.Scoring.Scoring
+import ir.utils.{IRUtils, Scoring}
+import ir.classifires.{LogisticRegression, NaiveBayes, SVM}
 
 import scala.collection.mutable.ListBuffer
 
 object Go extends App {
 
+  // defining param constants
+  val TEST_MODE = "test"
+  val VALIDATION_MODE = "vali"
+
+  val BAYES = "nb"
+  val SVM = "lsvm"
+  val LINEAR_REGRESSION = "lr"
+
   // Set default parameters
-
-  // vali, test
-  var runMode = "test"
-  //lsvm, nb, lr
-  var classifierType = "lr"
-
   var baseDir = "/home/ajuodelis/eth/ir/data_real"
+  var classifierType = BAYES
+  var runMode = VALIDATION_MODE
+
+  val codesPath = baseDir + "/codes"
+  val trainPath = baseDir + "/train"
+  val predictPath =
+    if (runMode == VALIDATION_MODE) baseDir + "/validation"
+    else baseDir + "/test"
 
   if (!args.isEmpty) {
     baseDir = args(0)
     classifierType = args(1)
     runMode = args(2)
   }
-
-  val codesPath = baseDir + "/codes"
-  val trainPath = baseDir + "/train"
-
-  val predictPath =
-    if (runMode == "vali") baseDir + "/validation"
-    else baseDir + "/test"
-
   val watch = new StopWatch()
-  watch.start
-
-  println("initializing ... ")
   val codesStream = new ZipDirStream(codesPath).stream
   val trainStream = new ReutersRCVStream(trainPath).stream
   val predictStream = new ReutersRCVStream(predictPath).stream
+  watch.start
+
+  println("initializing ... ")
   //reading all codes from training set
   val codeSet = trainStream.map(doc => doc.codes).reduce(_ ++ _)
   // making map: Doc_Name -> Doc_Vector, by Doc_Vector means: Distinct_Token -> Frequency_Number
   val allDocsVectorsTrain = IRUtils.getAllDocsVectors(trainStream)
   val allDocVectorsToPredict = IRUtils.getAllDocsVectors(predictStream)
-
   // merging all vocab to one set, in order to get distinct tokens
   val vocab = IRUtils.getSetOfDistinctTokens(allDocsVectorsTrain)
   val vocabSize = vocab.size
@@ -57,21 +58,18 @@ object Go extends App {
   println("------------")
 
   watch.start
-
   // Start of Naive Bayes
   var resultsMap = Map[String, ListBuffer[String]]()
 
-  if (classifierType == "nb") {
+  if (classifierType == BAYES) {
     println("very naïve Bayes ...")
 
-    // todo: run this for Validation or Test docs. Only for Test Docs you need to print a file with the results.
-    // todo: For Validation docs, get the result via prediction method and then send it to the F1 Score method in IRUtils
     val naiveBayes = new NaiveBayes(vocabSize, vocab, allDocsVectorsTrain, codeSet, trainStream, predictStream)
-
+    resultsMap = naiveBayes.predict()
   }
 
   // Start of linear SVM (if specified)
-  if (classifierType == "lsvm") {
+  if (classifierType == SVM) {
     println("support vector machine  ...")
 
     val lambda = 0.01
@@ -97,7 +95,7 @@ object Go extends App {
 
 
   // Start of Logistic Regression (if specified)
-  if (classifierType == "lr") {
+  if (classifierType == LINEAR_REGRESSION) {
     println("logistic regression ...")
 
     val alphap = 1.0
@@ -110,7 +108,7 @@ object Go extends App {
       val trainDocsFiltered = trainStream.filter(_.codes(code))
       val allTrainy = trainDocsFiltered.map(doc => doc.name -> 1).toMap
 
-      val lRClassifier = new LogisticRegressionClassifier(allDocsVectorsTrain, allTrainy, alphap, alpham, steps)
+      val lRClassifier = new LogisticRegression(allDocsVectorsTrain, allTrainy, alphap, alpham, steps)
 
       // Now predict the docs that match this current code
       // allDocVectorsToPredict is of type Map[String, Map[String, Int]] -> Doc Name + Map of distinct tokens + coutn
@@ -122,20 +120,18 @@ object Go extends App {
   }
 
   // Call calcualte F1 Score in case Run Mode is "Validation"
-  if (runMode == "vali") {
+  if (runMode == VALIDATION_MODE) {
     val score = new Scoring(predictStream, resultsMap)
     val f1ScoreSVM = score.calculateF1()
     println("The F1 Score for the " + classifierType + " Classifier is: " + f1ScoreSVM)
   }
-
   // Write results to file in case Run Mode is "Test"
-  if (runMode == "test") {
+  else {
     IRUtils.saveResultMap(resultsMap, "ir-project-2016-1-28-" + classifierType + ".txt")
   }
 
   watch.stop
   println("Classifier execution done " + watch.stopped)
-
 
   // add code/label to result set if number is positive
   // resultsLogReg will contain for each Doc name a list of codes found

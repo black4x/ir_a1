@@ -3,8 +3,8 @@ package ir.classifires
 
 import ch.ethz.dal.tinyir.processing.XMLDocument
 import ch.ethz.dal.tinyir.util.StopWatch
-import ir.IRUtils
-import ir.IRUtils.DocVector
+import ir.utils.IRUtils
+import ir.utils.IRUtils.DocVector
 
 import scala.collection.mutable.ListBuffer
 
@@ -52,8 +52,6 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
 
   })
 
-  IRUtils.saveResultMap(result,"ir-project-2016-1-28-nb.txt")
-
   def calculateConditionalProbability(oneClassStream: Stream[XMLDocument]): (Double, Map[String, Double]) = {
 
     val docsSet = oneClassStream.map(doc => doc.name).toSet
@@ -69,9 +67,8 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
     (codePriorLog, condProbLogMap)
   }
 
-  def predict(): Unit = {
+  def predict() = result
 
-  }
 
   private def getProgress(index: Int, len: Int, code: String): Int = {
     println("%.0f".format(i.toDouble * 100 / len) + "% done, label = " + code + " " + watch.stopped)
