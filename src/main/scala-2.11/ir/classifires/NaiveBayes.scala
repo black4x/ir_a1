@@ -12,8 +12,7 @@ import scala.collection.mutable.ListBuffer
 class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
                  val allDocsVectors: Map[String, DocVector],
                  codeSet: Set[String],
-                 trainStream: Stream[XMLDocument],
-                 testStream: Stream[XMLDocument]) {
+                 trainStream: Stream[XMLDocument]) {
 
   // only for showing progress **** TODO remove later ?
   val codeSize = codeSet.size
@@ -21,36 +20,20 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
   val watch = new StopWatch()
   // *** END
 
-
-  //val stest = Set("I33020", "GCRIM", "THAIL")
-
   // for each code calc conditional probability
-
-  var result = Map[String, ListBuffer[String]]()
-
-  val condProbPerCode = codeSet.foreach(code => {
+  val condProbPerCode = codeSet.map(code => {
 
     watch.start
 
     val (docsWithCode, docsWithoutCode) = trainStream.partition(_.codes(code))
 
-    val (codePriorLogWithCode, condProbLogMapWithCode) = calculateConditionalProbability(docsWithCode)
-    val (codePriorLogWithoutCode, condProbLogMapWithoutCode) = calculateConditionalProbability(docsWithoutCode)
-
-
-    testStream.foreach(testDoc => {
-      val probWithCode = calcCondProb(testDoc, condProbLogMapWithCode) + codePriorLogWithCode
-      val probWithoutCode = calcCondProb(testDoc, condProbLogMapWithoutCode) + codePriorLogWithoutCode
-      if (probWithCode > probWithoutCode) {
-        if (result.contains(testDoc.name)) result.getOrElse(testDoc.name, ListBuffer[String]()) += code
-        else result += (testDoc.name -> ListBuffer[String](code))
-      }
-    })
+    val res = code -> (calculateConditionalProbability(docsWithCode), calculateConditionalProbability(docsWithoutCode))
 
     watch.stop
     i = getProgress(i, codeSize, code)
 
-  })
+    res
+  }).toMap
 
   def calculateConditionalProbability(oneClassStream: Stream[XMLDocument]): (Double, Map[String, Double]) = {
 
@@ -67,7 +50,29 @@ class NaiveBayes(val vocabSize: Int, val vocab: Set[String],
     (codePriorLog, condProbLogMap)
   }
 
-  def predict() = result
+  def predict(testStream: Stream[XMLDocument]) = {
+
+    var result = Map[String, ListBuffer[String]]()
+
+    codeSet.foreach(code => {
+
+      val condProbTuple = condProbPerCode.get(code)
+      condProbTuple match {
+        case Some(_) => {
+          val (withCode, withoutCode) = condProbTuple.get
+          testStream.foreach(testDoc => {
+            val probWithCode = calcCondProb(testDoc, withCode._2) + withCode._1
+            val probWithoutCode = calcCondProb(testDoc, withoutCode._2) + withoutCode._1
+            if (probWithCode > probWithoutCode) {
+              if (result.contains(testDoc.name)) result.getOrElse(testDoc.name, ListBuffer[String]()) += code
+              else result += (testDoc.name -> ListBuffer[String](code))
+            }
+          })
+        }
+      }
+    })
+    result
+  }
 
 
   private def getProgress(index: Int, len: Int, code: String): Int = {
