@@ -6,7 +6,6 @@ where:
 
 <base_dir> is the folder witch must contain other folders 
 with zip archive respectively: 
-/codes - codes.zip
 /train - train.zip
 /validation - validation.zip
 /test - test.zip

@@ -22,7 +22,6 @@ object Go extends App {
   var classifierType = BAYES
   var runMode = VALIDATION_MODE
 
-  val codesPath = baseDir + "/codes"
   val trainPath = baseDir + "/train"
   val predictPath =
     if (runMode == VALIDATION_MODE) baseDir + "/validation"
@@ -34,7 +33,6 @@ object Go extends App {
     runMode = args(2)
   }
   val watch = new StopWatch()
-  val codesStream = new ZipDirStream(codesPath).stream
   val trainStream = new ReutersRCVStream(trainPath).stream
   val predictStream = new ReutersRCVStream(predictPath).stream
   watch.start
