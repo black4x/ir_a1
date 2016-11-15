@@ -1,5 +1,24 @@
-# ir_a1
+run it with sbt:
 
-1. <b>Parallelism</b>. Reduce function has been used everywhere because all collection have parallelism, e.g. they have no order of cumulation (during finding distinct tokens and summing). And ParSet ++ Set used in order to do parallel merging
-2. <b>Cash Reuse</b>. DocVector is used in order to reuse vocab cash with quick look up by doc-> word -> word frequency 
-3. <b>Preprocessing</b> all stop words have been filtered
+sbt -mem 15000 "run <base_dir> <classifier> <mode>"
+
+where: 
+
+<base_dir> is the folder witch must contain other folders 
+with zip archive respectively: 
+/codes - codes.zip
+/train - train.zip
+/validation - validation.zip
+/test - test.zip
+
+<classifier> has following types: 
+nb - Naive Bayes
+lsvm - Linear Support Vector Machine
+lg - Logistic Regression
+
+<mode> can be either:
+vali
+test
+
+-mem 15000 sets memory to 15G for performance reasons, 
+so that all hash maps fits RAM in memory

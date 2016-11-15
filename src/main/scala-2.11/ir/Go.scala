@@ -64,8 +64,8 @@ object Go extends App {
   if (classifierType == BAYES) {
     println("very naïve Bayes ...")
 
-    val naiveBayes = new NaiveBayes(vocabSize, vocab, allDocsVectorsTrain, codeSet, trainStream)
-    resultsMap = naiveBayes.predict(predictStream)
+    val naiveBayes = new NaiveBayes(vocabSize, vocab, allDocsVectorsTrain, codeSet, trainStream, predictStream)
+    resultsMap = naiveBayes.predict()
   }
 
   // Start of linear SVM (if specified)
