@@ -1,3 +1,5 @@
+before running please copy tinyir.jar to lib folder where build.sbt file is.
+
 run it with sbt:
 
 sbt -mem 15000 "run <base_dir> <classifier> <mode>"
@@ -20,4 +22,4 @@ vali
 test
 
 -mem 15000 sets memory to 15G for performance reasons, 
-so that all hash maps fits RAM in memory
+so that all hash maps fits in memory
